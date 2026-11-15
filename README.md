@@ -125,8 +125,8 @@ feed, and `releases/latest/download/MicLight.dmg` always downloads it.
 
 ---
 
-Made by [Jérémy Frère](https://frerejeremy.me). Also by Jérémy:
-[Imprint](https://jerefrer.github.io/imprint/).
+Made by [Jérémy Frère](https://frerejeremy.me) · [Sponsor this work](https://github.com/sponsors/jerefrer) ·
+also by Jérémy: [Headcount](https://jerefrer.github.io/headcount/), attendance reports for Zoom webinars.
 
 Mic Light is not affiliated with Zoom. Zoom is a trademark of Zoom
 Communications, Inc.

@@ -1,14 +1,19 @@
 import AppKit
 import ZoomMicStatusCore
 
-/// A thick colored frame around every screen. Clicks pass through it.
+/// A colored frame around every screen. Clicks pass through it.
 @MainActor
 final class BorderOverlay {
     private var windows: [NSWindow] = []
     private var state: MicState?
     private var screenObserver: NSObjectProtocol?
 
-    init() {
+    var style: BorderStyle {
+        didSet { windows.forEach { ($0.contentView as? BorderView)?.style = style } }
+    }
+
+    init(style: BorderStyle) {
+        self.style = style
         screenObserver = NotificationCenter.default.addObserver(
             forName: NSApplication.didChangeScreenParametersNotification,
             object: nil, queue: .main
@@ -34,11 +39,11 @@ final class BorderOverlay {
     /// Screens were added, removed or rearranged: one window per screen.
     private func rebuild() {
         windows.forEach { $0.close() }
-        windows = NSScreen.screens.map(Self.makeWindow)
+        windows = NSScreen.screens.map { makeWindow(for: $0) }
         if let state { show(state) }
     }
 
-    private static func makeWindow(for screen: NSScreen) -> NSWindow {
+    private func makeWindow(for screen: NSScreen) -> NSWindow {
         let window = NSWindow(
             contentRect: screen.frame, styleMask: .borderless, backing: .buffered, defer: false
         )
@@ -49,7 +54,9 @@ final class BorderOverlay {
         window.isOpaque = false
         window.backgroundColor = .clear
         window.hasShadow = false
-        window.contentView = BorderView()
+        let view = BorderView()
+        view.style = style
+        window.contentView = view
         window.setFrame(screen.frame, display: false)
         return window
     }
@@ -60,11 +67,35 @@ private final class BorderView: NSView {
         didSet { needsDisplay = true }
     }
 
+    var style = BorderStyle.standard {
+        didSet { needsDisplay = true }
+    }
+
     override func draw(_ dirtyRect: NSRect) {
-        let inset = Spacing.borderWidth / 2
-        let path = NSBezierPath(rect: bounds.insetBy(dx: inset, dy: inset))
-        path.lineWidth = Spacing.borderWidth
-        color.setStroke()
-        path.stroke()
+        let width = CGFloat(style.width)
+        let edgeColor = color.withAlphaComponent(CGFloat(style.opacity))
+
+        guard style.fades else {
+            let inset = width / 2
+            let path = NSBezierPath(rect: bounds.insetBy(dx: inset, dy: inset))
+            path.lineWidth = width
+            edgeColor.setStroke()
+            path.stroke()
+            return
+        }
+
+        // Concentric one-pixel rings, fading toward the center. Each ring is
+        // a whole rectangle, so the corners have no seam, and every pixel's
+        // opacity depends only on its distance to the nearest screen edge.
+        let pixel = 1 / (window?.backingScaleFactor ?? 2)
+        let rings = max(1, Int((width / pixel).rounded()))
+        for ring in 0..<rings {
+            let progress = (CGFloat(ring) + 0.5) / CGFloat(rings)
+            let inset = (CGFloat(ring) + 0.5) * pixel
+            let path = NSBezierPath(rect: bounds.insetBy(dx: inset, dy: inset))
+            path.lineWidth = pixel
+            edgeColor.withAlphaComponent(CGFloat(style.opacity) * (1 - progress)).setStroke()
+            path.stroke()
+        }
     }
 }

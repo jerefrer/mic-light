@@ -35,6 +35,12 @@ public struct Strings: Sendable {
     public var badgeMode: String { pick("Floating badge", "Pastille flottante") }
     public var borderMode: String { pick("Screen border", "Bordure d'écran") }
     public var menuBarMode: String { pick("Colored menu bar icon", "Icône colorée dans la barre des menus") }
+    public var borderSettings: String { pick("Border Settings", "Réglages de la bordure") }
+    public var borderWidth: String { pick("Thickness", "Épaisseur") }
+    public var borderOpacity: String { pick("Opacity", "Opacité") }
+    public var borderFade: String { pick("Fade toward the center", "Dégradé vers l'intérieur") }
+    public func points(_ value: Double) -> String { "\(Int(value.rounded())) pt" }
+    public func percent(_ value: Double) -> String { "\(Int((value * 100).rounded())) %" }
     public var grantAccess: String { pick("Grant Accessibility Access…", "Autoriser l'accès Accessibilité…") }
     public var resetBadgePosition: String { pick("Reset Badge Position", "Replacer la pastille") }
     public var launchAtLogin: String { pick("Launch at Login", "Ouvrir à la connexion") }

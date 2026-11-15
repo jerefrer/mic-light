@@ -46,6 +46,7 @@ enum Spacing {
     /// Keeps slider values from shifting the slider as digits change.
     static let settingsValueWidth: CGFloat = 52
     static let settingsSliderWidth: CGFloat = 200
+    static let settingsSliderMinWidth: CGFloat = 100
     /// Illustrations: a miniature desktop at the top of each page.
     static let illustrationCornerRadius: CGFloat = 14
     /// Keeps the settings below an illustration visible without scrolling.

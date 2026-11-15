@@ -142,7 +142,8 @@ struct SettingsRow<Control: View>: View {
 
     var body: some View {
         HStack {
-            Text(label)
+            // The label wins over flexible controls such as sliders.
+            Text(label).layoutPriority(1)
             Spacer(minLength: Spacing.settingsCardPadding)
             control
         }
@@ -175,7 +176,7 @@ struct SliderRow: View {
                 get: { value.wrappedValue },
                 set: { value.wrappedValue = ($0 / rounding).rounded() * rounding }
             ), in: range)
-            .frame(width: Spacing.settingsSliderWidth)
+            .frame(minWidth: Spacing.settingsSliderMinWidth, maxWidth: Spacing.settingsSliderWidth)
             Text(format(value.wrappedValue))
                 .font(Typography.settingsValue)
                 .foregroundStyle(.secondary)

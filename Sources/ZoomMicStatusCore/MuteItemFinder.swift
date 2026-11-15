@@ -1,0 +1,39 @@
+/// A node of an application's menu tree: the menu bar, a menu, or an item.
+public protocol MenuNode: AnyObject {
+    var title: String? { get }
+    /// Fetched lazily: on the real tree every call is an IPC round-trip to Zoom.
+    func children() -> [Self]
+}
+
+public struct MuteItemMatch<Node: MenuNode> {
+    public let node: Node
+    public let state: MicState
+}
+
+/// Walks Zoom's menu bar looking for the mute / unmute item.
+public struct MuteItemFinder: Sendable {
+    let titles: MuteMenuTitles
+    /// Menu bar → bar item → menu → menu item is depth 3; one extra level
+    /// covers the item moving into a submenu.
+    let maxDepth: Int
+
+    public init(titles: MuteMenuTitles, maxDepth: Int = 4) {
+        self.titles = titles
+        self.maxDepth = maxDepth
+    }
+
+    public func find<Node: MenuNode>(in root: Node) -> MuteItemMatch<Node>? {
+        search(root, depth: 0)
+    }
+
+    private func search<Node: MenuNode>(_ node: Node, depth: Int) -> MuteItemMatch<Node>? {
+        if let title = node.title, let state = titles.state(forMenuTitle: title) {
+            return MuteItemMatch(node: node, state: state)
+        }
+        guard depth < maxDepth else { return nil }
+        for child in node.children() {
+            if let match = search(child, depth: depth + 1) { return match }
+        }
+        return nil
+    }
+}

@@ -1,0 +1,42 @@
+/// Every user-facing string, in English and French.
+public struct Strings: Sendable {
+    let french: Bool
+
+    public init(preferredLanguages: [String]) {
+        french = preferredLanguages.first?.hasPrefix("fr") ?? false
+    }
+
+    private func pick(_ en: String, _ fr: String) -> String { french ? fr : en }
+
+    public func badgeLabel(_ state: MicState) -> String {
+        switch state {
+        case .muted: pick("MIC MUTED", "MICRO COUPÉ")
+        case .live: pick("MIC LIVE", "MICRO OUVERT")
+        }
+    }
+
+    public func menuBarLabel(_ state: MicState) -> String {
+        switch state {
+        case .muted: pick("MUTED", "COUPÉ")
+        case .live: pick("LIVE", "OUVERT")
+        }
+    }
+
+    public func statusLine(_ status: IndicatorStatus) -> String {
+        switch status {
+        case .mic(.muted): pick("Zoom: microphone muted", "Zoom : micro coupé")
+        case .mic(.live): pick("Zoom: microphone live", "Zoom : micro ouvert")
+        case .idle: pick("No Zoom meeting in progress", "Aucune réunion Zoom en cours")
+        case .needsPermission: pick("Accessibility access required", "Accès Accessibilité requis")
+        }
+    }
+
+    public var displaySection: String { pick("Show the state with", "Afficher l'état avec") }
+    public var badgeMode: String { pick("Floating badge", "Pastille flottante") }
+    public var borderMode: String { pick("Screen border", "Bordure d'écran") }
+    public var menuBarMode: String { pick("Colored menu bar icon", "Icône colorée dans la barre des menus") }
+    public var grantAccess: String { pick("Grant Accessibility Access…", "Autoriser l'accès Accessibilité…") }
+    public var resetBadgePosition: String { pick("Reset Badge Position", "Replacer la pastille") }
+    public var launchAtLogin: String { pick("Launch at Login", "Ouvrir à la connexion") }
+    public var quit: String { pick("Quit Zoom Mic Status", "Quitter Zoom Mic Status") }
+}

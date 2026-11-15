@@ -1,4 +1,5 @@
 import ZoomMicStatusCore
+import os
 
 /// Polls Zoom and reports every status change.
 @MainActor
@@ -12,6 +13,7 @@ final class StatusMonitor {
     /// Lets the system coalesce wake-ups without a noticeable delay.
     private static let wakeTolerance = Duration.milliseconds(20)
 
+    private let logger = Logger(subsystem: "com.jerefrer.zoom-mic-status", category: "monitor")
     private let probe: ZoomProbe
     private let onChange: (IndicatorStatus) -> Void
     private var loop: Task<Void, Never>?
@@ -29,9 +31,15 @@ final class StatusMonitor {
     func start() {
         onChange(status)
         loop = Task { [weak self] in
+            let clock = ContinuousClock()
             while !Task.isCancelled {
                 guard let interval = self?.tick() else { return }
+                let start = clock.now
                 try? await Task.sleep(for: interval, tolerance: Self.wakeTolerance) // Throws only on cancellation, checked by the loop.
+                let slept = clock.now - start
+                if slept > interval * 2 {
+                    self?.logger.debug("Late wake-up: slept \(slept, privacy: .public) for \(interval, privacy: .public)")
+                }
             }
         }
     }
@@ -41,6 +49,7 @@ final class StatusMonitor {
     func tick() -> Duration {
         let latest = probe.readStatus()
         if latest != status {
+            logger.debug("Status changed to \(String(describing: latest), privacy: .public)")
             status = latest
             onChange(latest)
         }

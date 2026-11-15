@@ -35,16 +35,10 @@ public struct MuteMenuTitles: Sendable {
     /// Reads the titles from every localization shipped inside Zoom, so the
     /// detection works whatever language Zoom is displayed in.
     public static func load(fromZoomResources resources: URL) -> MuteMenuTitles {
-        let localizations = (try? FileManager.default.contentsOfDirectory(
-            at: resources, includingPropertiesForKeys: nil
-        )) ?? []
-
         var mute: [String] = []
         var unmute: [String] = []
         var meetingMenu: [String] = []
-        for dir in localizations where dir.pathExtension == "lproj" {
-            let file = dir.appendingPathComponent("Localizable.strings")
-            guard let table = NSDictionary(contentsOf: file) as? [String: String] else { continue }
+        for table in ZoomLocalizations.tables(in: resources) {
             if let title = table[muteKey] { mute.append(title) }
             if let title = table[unmuteKey] { unmute.append(title) }
             if let title = table[meetingMenuKey] { meetingMenu.append(title) }

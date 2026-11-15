@@ -23,9 +23,12 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         let window = self.window ?? makeWindow()
         self.window = window
         model.windowWillShow()
-        // A menu bar app is never active on its own; without this the
-        // window would open behind the frontmost app.
-        NSApp.activate()
+        // A menu bar app is never active on its own, and leaving the Dock
+        // deactivates it. The cooperative `NSApp.activate()` is then refused
+        // while another app is frontmost, leaving the window behind it
+        // (reproduced: the window only came forward after several clicks).
+        // The deprecated forced activation is the only call that works here.
+        NSApp.activate(ignoringOtherApps: true)
         window.makeKeyAndOrderFront(nil)
         if !isOpen {
             isOpen = true

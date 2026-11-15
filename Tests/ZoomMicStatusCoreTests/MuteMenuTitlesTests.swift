@@ -41,6 +41,26 @@ struct MuteMenuTitlesTests {
         #expect(loaded.state(forMenuTitle: "Unmute audio") == .muted)
     }
 
+    @Test func shouldLoadMeetingMenuTitlesFromZoomResources() throws {
+        let resources = try makeResources([
+            "en": ["Mute Audio": "Mute audio", "Unmute Audio": "Unmute audio", "Meeting": "Meeting"],
+            "fr": ["Mute Audio": "Désactiver le son", "Unmute Audio": "Réactiver le son", "Meeting": "Réunion"],
+        ])
+
+        let loaded = MuteMenuTitles.load(fromZoomResources: resources)
+
+        #expect(loaded.isMeetingMenu("Réunion"))
+        #expect(!loaded.isMeetingMenu("Fenêtre"))
+    }
+
+    @Test func shouldKnowNoMeetingMenuWhenZoomLacksTheKey() throws {
+        let resources = try makeResources([
+            "en": ["Mute Audio": "Mute audio", "Unmute Audio": "Unmute audio"],
+        ])
+
+        #expect(MuteMenuTitles.load(fromZoomResources: resources).meetingMenuTitlesKnown == false)
+    }
+
     @Test func shouldFallBackToBuiltInTitlesWhenZoomIsMissing() {
         let loaded = MuteMenuTitles.load(fromZoomResources: URL(fileURLWithPath: "/nonexistent"))
 

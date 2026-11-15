@@ -27,6 +27,9 @@ It only *reads* the menu. It never presses an item or sends input to Zoom.
 
 Polling runs every 100 ms during a meeting and every 1.5 s otherwise; the item
 found is cached, so an in-meeting read is a single accessibility call.
+Only the Meeting menu is searched (its title also comes from Zoom's
+localizations): walking the others, the Window menu especially, costs Zoom
+noticeable time.
 
 ## Requirements
 

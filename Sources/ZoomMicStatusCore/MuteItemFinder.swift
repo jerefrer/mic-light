@@ -22,14 +22,26 @@ public struct MuteItemFinder: Sendable {
         self.maxDepth = maxDepth
     }
 
+    /// Searches the menu bar `root`. When the Meeting menu's title is known,
+    /// only that menu is opened: walking the others costs Zoom real time
+    /// (its Window menu measured at over half a second).
     public func find<Node: MenuNode>(in root: Node) -> MuteItemMatch<Node>? {
-        search(root, depth: 0)
+        guard titles.meetingMenuTitlesKnown else { return search(root, depth: 0) }
+        for menu in root.children() {
+            guard let title = menu.title, titles.isMeetingMenu(title) else { continue }
+            if let match = search(menu, depth: 1) { return match }
+        }
+        return nil
+    }
+
+    /// Re-checks a previously found item without walking anything.
+    public func match<Node: MenuNode>(_ node: Node) -> MuteItemMatch<Node>? {
+        guard let title = node.title, let state = titles.state(forMenuTitle: title) else { return nil }
+        return MuteItemMatch(node: node, state: state)
     }
 
     private func search<Node: MenuNode>(_ node: Node, depth: Int) -> MuteItemMatch<Node>? {
-        if let title = node.title, let state = titles.state(forMenuTitle: title) {
-            return MuteItemMatch(node: node, state: state)
-        }
+        if let match = match(node) { return match }
         guard depth < maxDepth else { return nil }
         for child in node.children() {
             if let match = search(child, depth: depth + 1) { return match }

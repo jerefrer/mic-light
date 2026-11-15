@@ -48,6 +48,42 @@ struct MuteItemFinderTests {
         #expect(MuteItemFinder(titles: titles, maxDepth: 3).find(in: deep) == nil)
     }
 
+    @Test func shouldOnlySearchTheMeetingMenuWhenItsTitleIsKnown() {
+        let scoped = MuteMenuTitles(muteTitles: ["Mute audio"], unmuteTitles: ["Unmute audio"], meetingMenuTitles: ["Meeting"])
+        // Zoom's Window menu can take over half a second to walk.
+        let window = FakeNode("Window", [FakeNode(nil, [FakeNode("Mute audio")])])
+        let menuBar = FakeNode(nil, [window, FakeNode("Meeting", [FakeNode(nil, [FakeNode("Start video")])])])
+
+        let match = MuteItemFinder(titles: scoped).find(in: menuBar)
+
+        #expect(match == nil)
+        #expect(window.childrenReads == 0)
+    }
+
+    @Test func shouldFindItemInLocalizedMeetingMenu() {
+        let scoped = MuteMenuTitles(muteTitles: ["Mute audio"], unmuteTitles: ["Unmute audio"], meetingMenuTitles: ["Meeting", "Réunion"])
+        let menuBar = FakeNode(nil, [FakeNode("Réunion", [FakeNode(nil, [FakeNode("Unmute audio")])])])
+
+        #expect(MuteItemFinder(titles: scoped).find(in: menuBar)?.state == .muted)
+    }
+
+    @Test func shouldSearchEveryMenuWhenMeetingMenuTitleIsUnknown() {
+        let menuBar = FakeNode(nil, [FakeNode("Anything", [FakeNode(nil, [FakeNode("Mute audio")])])])
+
+        #expect(MuteItemFinder(titles: titles).find(in: menuBar)?.state == .live)
+    }
+
+    @Test func shouldReadStateOfCachedItemWithoutExpandingIt() {
+        let item = FakeNode("Unmute audio", [FakeNode("child")])
+
+        #expect(MuteItemFinder(titles: titles).match(item)?.state == .muted)
+        #expect(item.childrenReads == 0)
+    }
+
+    @Test func shouldNotMatchCachedItemWhoseTitleChangedToSomethingElse() {
+        #expect(MuteItemFinder(titles: titles).match(FakeNode("Start video")) == nil)
+    }
+
     @Test func shouldNotExpandItemsThatAlreadyMatch() {
         let item = FakeNode("Mute audio", [FakeNode("child")])
         let menuBar = FakeNode(nil, [FakeNode("Meeting", [FakeNode(nil, [item])])])

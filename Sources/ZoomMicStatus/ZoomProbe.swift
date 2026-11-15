@@ -54,7 +54,7 @@ final class ZoomProbe {
         // Re-reading the item found last time costs one round-trip instead
         // of a walk through every menu.
         if cachedPID == zoom.processIdentifier, let item = cachedItem,
-           let match = finder.find(in: item) {
+           let match = finder.match(item) {
             return .mic(match.state)
         }
 

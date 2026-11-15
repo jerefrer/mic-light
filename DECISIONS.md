@@ -52,3 +52,12 @@
 **Revisit if:** The sandbox write rules change.
 
 ---
+
+## 2026-11-15 — Search only Zoom's Meeting menu
+**Chosen:** When the localized title of Zoom's Meeting menu is known (key `Meeting` in Zoom's string tables), only that menu is walked; other menus are never opened.
+**Alternatives:** Walking the whole menu bar (previous behavior); keeping the whole walk but slowing idle polling further.
+**Why:** Measured against Zoom 7.1.9: the whole walk took ~75 ms and Zoom's Window menu alone up to 585 ms, served on Zoom's main thread every 1.5 s while no meeting runs, which can make Zoom stutter. The scoped walk measured ~1.6 ms.
+**Trade-offs:** If Zoom moves the mute item out of the Meeting menu, detection stops (reported as "no meeting"). If the key is missing, the app falls back to the whole walk.
+**Revisit if:** A Zoom update stops the detection while a meeting runs.
+
+---

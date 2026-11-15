@@ -17,6 +17,16 @@ MainActor.assumeIsolated {
         exit(0)
     }
 
+    // Build tooling: writes the app icon (the idle Dock icon) as a 1024 px PNG.
+    if let index = CommandLine.arguments.firstIndex(of: "--write-app-icon") {
+        guard let image = DockIcon.image(shown: nil, needsPermission: false),
+              let bitmap = image.representations.first as? NSBitmapImageRep,
+              let png = bitmap.representation(using: .png, properties: [:]),
+              (try? png.write(to: URL(fileURLWithPath: CommandLine.arguments[index + 1]))) != nil
+        else { exit(1) }
+        exit(0)
+    }
+
     let app = NSApplication.shared
     let delegate = AppDelegate()
     app.delegate = delegate

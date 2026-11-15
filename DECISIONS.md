@@ -97,3 +97,12 @@
 **Revisit if:** Supporting macOS 14 matters, or NavigationSplitView's width handling is fixed.
 
 ---
+
+## 2026-11-15 — Auto-updates with Sparkle from GitHub releases, Developer ID signing
+**Chosen:** Sparkle 2 (SwiftPM), feed at `https://github.com/jerefrer/zoom-mic-status/releases/latest/download/appcast.xml`, updates signed with a dedicated EdDSA key (keychain account `zoom-mic-status`). The app is signed with the Developer ID (hardened runtime) and notarized; `scripts/release.sh` publishes locally with `gh`. This supersedes the ad hoc signing of the earlier build entry, which remains only as a fallback when the certificate is missing.
+**Alternatives:** A GitHub Actions workflow as in Imprint; a hand-written updater calling the GitHub API; GitHub Pages for the appcast.
+**Why:** Same approach as the user's Imprint app, already proven on this account. Releasing locally reuses the certificate, the `imprint-notarize` notarytool profile and the keychain key with no CI secrets to set up. Serving the appcast as a release asset needs no Pages site. A Developer ID gives a designated requirement based on the team, so the Accessibility grant survives updates, which ad hoc signing could not guarantee.
+**Trade-offs:** Releases need this Mac (certificate, profile, key). The repository must be public for Sparkle to fetch release assets without credentials. Switching from ad hoc to Developer ID signing invalidates the existing Accessibility grant once.
+**Revisit if:** Releases should run from CI, or the repository has to stay private.
+
+---

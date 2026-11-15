@@ -145,5 +145,10 @@ public struct Strings: Sendable {
     public func version(_ number: String) -> String { pick("Version \(number)", "Version \(number)") }
     public var generalSection: String { pick("General", "Général") }
     public var accessibilityGranted: String { pick("Accessibility access granted", "Accès Accessibilité accordé") }
+    public var checkForUpdates: String { pick("Check for Updates…", "Rechercher les mises à jour…") }
+    public var updatesSection: String { pick("Updates", "Mises à jour") }
+    public var checkAutomatically: String {
+        pick("Check for updates automatically", "Rechercher automatiquement les mises à jour")
+    }
     public var quit: String { pick("Quit Zoom Mic Status", "Quitter Zoom Mic Status") }
 }

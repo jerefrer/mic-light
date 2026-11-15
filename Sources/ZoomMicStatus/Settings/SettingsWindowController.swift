@@ -7,14 +7,16 @@ import ZoomMicStatusCore
 @MainActor
 final class SettingsWindowController: NSObject, NSWindowDelegate {
     private let model: SettingsViewModel
+    private let updater: Updater
     private let strings: Strings
     private let onVisibilityChanged: (Bool) -> Void
     private var window: NSWindow?
 
     private(set) var isOpen = false
 
-    init(model: SettingsViewModel, strings: Strings, onVisibilityChanged: @escaping (Bool) -> Void) {
+    init(model: SettingsViewModel, updater: Updater, strings: Strings, onVisibilityChanged: @escaping (Bool) -> Void) {
         self.model = model
+        self.updater = updater
         self.strings = strings
         self.onVisibilityChanged = onVisibilityChanged
     }
@@ -42,7 +44,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
     }
 
     private func makeWindow() -> NSWindow {
-        let hosting = NSHostingController(rootView: SettingsView(model: model, strings: strings))
+        let hosting = NSHostingController(rootView: SettingsView(model: model, updater: updater, strings: strings))
         hosting.sizingOptions = .preferredContentSize
         let window = NSWindow(contentViewController: hosting)
         window.title = strings.settingsTitle

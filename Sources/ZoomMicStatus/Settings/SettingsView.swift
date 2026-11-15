@@ -5,6 +5,7 @@ import ZoomMicStatusCore
 /// of the user's own desktop that follows the settings as they change.
 struct SettingsView: View {
     @ObservedObject var model: SettingsViewModel
+    @ObservedObject var updater: Updater
     let strings: Strings
     @State private var page: SettingsPage? = .general
 
@@ -23,7 +24,7 @@ struct SettingsView: View {
                 case .badge: BadgePage(model: model, strings: strings)
                 case .border: BorderPage(model: model, strings: strings)
                 case .menuBarDock: MenuBarDockPage(model: model, strings: strings)
-                case .about: AboutPage(model: model, strings: strings)
+                case .about: AboutPage(model: model, updater: updater, strings: strings)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -218,6 +219,7 @@ private struct MenuBarDockPage: View {
 
 private struct AboutPage: View {
     @ObservedObject var model: SettingsViewModel
+    @ObservedObject var updater: Updater
     let strings: Strings
 
     private var version: String {
@@ -237,6 +239,14 @@ private struct AboutPage: View {
                 Text(strings.aboutTagline).font(Typography.aboutTagline)
             }
             .frame(maxWidth: .infinity)
+
+            SettingsCard(title: strings.updatesSection) {
+                ToggleRow(label: strings.checkAutomatically, isOn: $updater.checksAutomatically)
+                SettingsRow(label: strings.version(version)) {
+                    Button(strings.checkForUpdates) { updater.checkForUpdates() }
+                        .disabled(!updater.canCheckForUpdates)
+                }
+            }
 
             SettingsCard {
                 Text(strings.aboutPrivacy)

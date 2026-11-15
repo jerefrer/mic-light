@@ -11,6 +11,7 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     private let canToggle: (DisplayModes) -> Bool
     private let onToggleMode: (DisplayModes) -> Void
     private let onOpenSettings: () -> Void
+    private let onCheckForUpdates: () -> Void
     private var status: IndicatorStatus = .idle
 
     init(
@@ -18,13 +19,15 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         modes: @escaping () -> DisplayModes,
         canToggle: @escaping (DisplayModes) -> Bool,
         onToggleMode: @escaping (DisplayModes) -> Void,
-        onOpenSettings: @escaping () -> Void
+        onOpenSettings: @escaping () -> Void,
+        onCheckForUpdates: @escaping () -> Void
     ) {
         self.strings = strings
         self.modes = modes
         self.canToggle = canToggle
         self.onToggleMode = onToggleMode
         self.onOpenSettings = onOpenSettings
+        self.onCheckForUpdates = onCheckForUpdates
         super.init()
         let menu = NSMenu()
         menu.delegate = self
@@ -91,6 +94,7 @@ final class StatusItemController: NSObject, NSMenuDelegate {
 
         menu.addItem(.separator())
         menu.addItem(action(strings.settings, #selector(openSettings), key: ","))
+        menu.addItem(action(strings.checkForUpdates, #selector(checkForUpdates)))
         if includingQuit {
             menu.addItem(action(strings.quit, #selector(NSApplication.terminate(_:)), key: "q"))
         }
@@ -112,6 +116,10 @@ final class StatusItemController: NSObject, NSMenuDelegate {
 
     @objc private func toggleMode(_ sender: NSMenuItem) {
         onToggleMode(DisplayModes(rawValue: sender.tag))
+    }
+
+    @objc private func checkForUpdates() {
+        onCheckForUpdates()
     }
 
     @objc private func openSettings() {

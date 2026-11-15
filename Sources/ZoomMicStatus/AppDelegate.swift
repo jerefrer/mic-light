@@ -19,6 +19,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var settingsModel: SettingsViewModel!
     private var settingsWindow: SettingsWindowController!
     private var monitor: StatusMonitor!
+    private let updater = Updater()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         badge = BadgeWindow(strings: strings, anchor: badgeAnchorStore.anchor)
@@ -36,7 +37,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         badge.onFrameChange = { [weak self] frame, draggedByUser in
             self?.settingsModel.update(badgeFrame: frame, draggedByUser: draggedByUser)
         }
-        settingsWindow = SettingsWindowController(model: settingsModel, strings: strings) { [weak self] _ in
+        settingsWindow = SettingsWindowController(model: settingsModel, updater: updater, strings: strings) { [weak self] _ in
             self?.render()
         }
         dock = DockController { [weak self] in
@@ -45,13 +46,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             guard let self, self.settingsWindow.isOpen else { return }
             self.settingsWindow.show()
         }
-        NSApp.mainMenu = MainMenu.make(strings: strings, settingsTarget: self, settingsAction: #selector(openSettings))
+        NSApp.mainMenu = MainMenu.make(
+            strings: strings, target: self,
+            settingsAction: #selector(openSettings), checkForUpdatesAction: #selector(checkForUpdates)
+        )
         statusItem = StatusItemController(
             strings: strings,
             modes: { [weak self] in self?.modeStore.modes ?? [] },
             canToggle: { [weak self] mode in self?.modeStore.canToggle(mode) ?? false },
             onToggleMode: { [weak self] mode in self?.settingsModel.toggle(mode) },
-            onOpenSettings: { [weak self] in self?.settingsWindow.show() }
+            onOpenSettings: { [weak self] in self?.settingsWindow.show() },
+            onCheckForUpdates: { [weak self] in self?.updater.checkForUpdates() }
         )
 
         let titles = MuteMenuTitles.load(fromZoomResources: Self.zoomResources)
@@ -66,6 +71,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func openSettings() {
         settingsWindow.show()
+    }
+
+    @objc private func checkForUpdates() {
+        updater.checkForUpdates()
     }
 
     /// Clicking the Dock icon opens the settings.

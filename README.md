@@ -63,18 +63,46 @@ noticeable time.
 - Zoom installed in `/Applications`
 - Xcode command line tools (Swift 6) to build
 
-## Build and install
+## Install and updates
+
+Download the latest `ZoomMicStatus-x.y.z.zip` from the
+[GitHub releases](https://github.com/jerefrer/zoom-mic-status/releases), unzip
+it and move *Zoom Mic Status* to Applications. The app is signed with a
+Developer ID and notarized by Apple.
+
+It updates itself through [Sparkle](https://sparkle-project.org): it checks the
+release feed once a day (or on demand with **Check for Updates…** in the menus
+and on the About page) and installs updates signed with the project's EdDSA
+key.
+
+On first launch, choose **Grant Accessibility Access…** in the menu, then
+enable *Zoom Mic Status* in System Settings → Privacy & Security →
+Accessibility.
+
+## Build
 
 ```sh
 scripts/build-app.sh            # builds build/Zoom Mic Status.app
 scripts/build-app.sh --install  # also copies it to ~/Applications
 ```
 
-On first launch, choose **Grant Accessibility Access…** in the menu, then
-enable *Zoom Mic Status* in System Settings → Privacy & Security →
-Accessibility.
+The app is signed with the Developer ID when it is in the keychain, ad hoc
+otherwise. The version comes from the `VERSION` file.
 
-"Launch at Login" is in the same menu.
+## Release
+
+```sh
+scripts/release.sh 0.2.0
+```
+
+Requires a clean working tree, the Developer ID certificate, the
+`imprint-notarize` notarytool profile (`NOTARY_PROFILE` overrides it) and the
+Sparkle private key in the login keychain (account `zoom-mic-status`). The
+script builds, notarizes and staples the app, signs the zip for Sparkle,
+writes `appcast.xml`, commits and tags the version, pushes, and publishes a
+GitHub release with both files. Installed copies read
+`releases/latest/download/appcast.xml`, so the newest release is always the
+feed.
 
 ## Diagnostics
 

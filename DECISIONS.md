@@ -61,3 +61,12 @@
 **Revisit if:** A Zoom update stops the detection while a meeting runs.
 
 ---
+
+## 2026-11-15 — Read the user's own tile, checked against the menu
+**Chosen:** Identify the user's participant tile by behavior (the only tile whose audio state followed two consecutive menu changes) and read it first; the menu stays the authority, and a tile disagreeing with it for over 1.5 s is dropped and relearned.
+**Alternatives:** Menu only (up to 1 s delay); identifying the tile by a display name set in the settings; by tile position.
+**Why:** Measured: Zoom refreshes the menu title on a ~1 s timer (tile→menu lag 60 ms–1.0 s, mean ~430 ms), while the tile changes immediately; with the tile the app follows within 0–80 ms. Tile order is not meaningful in Zoom, and the user's display name varies between meetings (e.g. "Jérémy | FR" contains none of their usual name variants), so a name setting would have failed in the very meeting used for testing.
+**Trade-offs:** The first two toggles of each meeting still lag. If another participant toggled in lockstep with the user twice, the wrong tile could be picked; the cross-check limits that to 1.5 s of wrong display. Relies on undocumented accessibility descriptions of tiles (localized phrases loaded from Zoom's string tables, keys matched without their numeric suffix).
+**Revisit if:** Zoom changes tile descriptions, or the learning proves slow in practice (a display-name hint could seed it).
+
+---

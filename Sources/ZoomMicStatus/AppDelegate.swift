@@ -33,7 +33,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         )
 
         let titles = MuteMenuTitles.load(fromZoomResources: Self.zoomResources)
-        monitor = StatusMonitor(probe: ZoomProbe(finder: MuteItemFinder(titles: titles))) { [weak self] _ in
+        let tiles = ZoomTiles(phrases: TileAudioPhrases.load(fromZoomResources: Self.zoomResources))
+        let probe = ZoomProbe(finder: MuteItemFinder(titles: titles), tiles: tiles)
+        monitor = StatusMonitor(probe: probe) { [weak self] _ in
             self?.render()
         }
         monitor.start()

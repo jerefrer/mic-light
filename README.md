@@ -23,7 +23,19 @@ the macOS Accessibility API: a menu offering to *unmute* means the mic is
 muted. The titles are loaded at launch from every localization inside
 `zoom.us.app`, so detection works whatever language Zoom is in.
 
-It only *reads* the menu. It never presses an item or sends input to Zoom.
+Zoom refreshes that menu item only about once per second, so on its own it
+lags a toggle by up to a second. The participant tiles of the meeting window
+change immediately and announce each participant's audio state ("Name,
+Computer audio muted, Video off"). The app learns which tile is the user's
+own by watching which one follows the menu: after two toggles at the start of
+a meeting only one tile remains consistent. From then on it reads that tile
+(measured 0–80 ms behind Zoom) and keeps checking it against the menu: if
+they disagree for more than 1.5 s, which Zoom's refresh delay cannot explain,
+it trusts the menu and learns again. When the user's tile is not on screen
+(speaker view, self view hidden), it falls back to the menu.
+
+It only *reads* Zoom's menu and windows. It never presses an item or sends
+input to Zoom.
 
 Polling runs every 100 ms during a meeting and every 1.5 s otherwise; the item
 found is cached, so an in-meeting read is a single accessibility call.

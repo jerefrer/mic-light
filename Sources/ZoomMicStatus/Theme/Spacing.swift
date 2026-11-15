@@ -15,6 +15,11 @@ enum Spacing {
     static let dockIconCornerRadius: CGFloat = 260
     static let dockIconShadowBlur: CGFloat = 24
     static let dockIconShadowOffset: CGFloat = -10
+    /// The fading frame of the icon (variant "A3" picked by the user).
+    static let dockIconFrameWidth: CGFloat = 200
+    static let dockIconFrameRadiusShrink: CGFloat = 0.6
+    static let dockIconFrameMinRadius: CGFloat = 10
+    static let dockIconFrameLineWidth: CGFloat = 1.5
     /// Settings window, sidebar and pages.
     static let settingsWindowWidth: CGFloat = 880
     static let settingsWindowHeight: CGFloat = 660

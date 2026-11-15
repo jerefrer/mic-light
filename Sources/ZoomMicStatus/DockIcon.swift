@@ -1,8 +1,9 @@
 import AppKit
 import ZoomMicStatusCore
 
-/// The app's Dock icon: a squircle tile in the state's color with a white
-/// microphone, drawn at runtime since it changes with the mic state.
+/// The app icon and Dock icon: a dark screen framed by the app's own fading
+/// border, in the state's color, around a white microphone. Drawn at runtime
+/// since the Dock icon follows the mic state; the app icon is the muted one.
 @MainActor
 enum DockIcon {
     static func image(shown: MicState?, needsPermission: Bool) -> NSImage? {
@@ -19,27 +20,38 @@ enum DockIcon {
 
         let canvas = NSRect(x: 0, y: 0, width: side, height: side)
         let body = canvas.insetBy(dx: Spacing.dockIconInset, dy: Spacing.dockIconInset)
-        let points = Squircle.outline(of: body, cornerRadius: Spacing.dockIconCornerRadius)
-        let tile = NSBezierPath()
-        tile.move(to: points[0])
-        points.dropFirst().forEach(tile.line(to:))
-        tile.close()
+        let tile = path(Squircle.outline(of: body, cornerRadius: Spacing.dockIconCornerRadius))
 
-        let color = shown.map(Colors.signal) ?? Colors.idle
         let shadow = NSShadow()
         shadow.shadowColor = Colors.dockIconShadow
         shadow.shadowBlurRadius = Spacing.dockIconShadowBlur
         shadow.shadowOffset = NSSize(width: 0, height: Spacing.dockIconShadowOffset)
         NSGraphicsContext.saveGraphicsState()
         shadow.set()
-        color.setFill()
+        Colors.dockIconTileBottom.setFill()
         tile.fill()
         NSGraphicsContext.restoreGraphicsState()
 
-        let top = color.blended(withFraction: Colors.dockIconHighlightFraction, of: Colors.dockIconHighlight) ?? color
-        NSGradient(starting: top, ending: color)?.draw(in: tile, angle: -90)
+        NSGraphicsContext.saveGraphicsState()
+        tile.addClip()
+        NSGradient(starting: Colors.dockIconTileTop, ending: Colors.dockIconTileBottom)?.draw(in: tile, angle: -90)
+        // The frame fades inward like the screen border: one thin outline per
+        // step, each a little smaller and fainter.
+        let frameColor = shown.map(Colors.signal) ?? Colors.idle
+        var inset: CGFloat = 0
+        while inset < Spacing.dockIconFrameWidth {
+            let fade = 1 - inset / Spacing.dockIconFrameWidth
+            let radius = max(Spacing.dockIconCornerRadius - inset * Spacing.dockIconFrameRadiusShrink,
+                             Spacing.dockIconFrameMinRadius)
+            let ring = path(Squircle.outline(of: body.insetBy(dx: inset, dy: inset), cornerRadius: radius))
+            ring.lineWidth = Spacing.dockIconFrameLineWidth
+            frameColor.withAlphaComponent(fade * fade).setStroke()
+            ring.stroke()
+            inset += 1
+        }
+        NSGraphicsContext.restoreGraphicsState()
 
-        let name = needsPermission ? Symbols.needsPermission : shown.map(Symbols.mic) ?? Symbols.idle
+        let name = needsPermission ? Symbols.needsPermission : Symbols.mic(shown ?? .live)
         let config = Typography.dockIconSymbol.applying(.init(paletteColors: [Colors.onSignal]))
         if let symbol = Symbols.image(name, config) {
             let size = symbol.size
@@ -52,6 +64,14 @@ enum DockIcon {
         let image = NSImage(size: canvas.size)
         image.addRepresentation(bitmap)
         return image
+    }
+
+    private static func path(_ points: [CGPoint]) -> NSBezierPath {
+        let path = NSBezierPath()
+        path.move(to: points[0])
+        points.dropFirst().forEach(path.line(to:))
+        path.close()
+        return path
     }
 }
 

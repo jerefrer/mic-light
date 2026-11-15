@@ -13,7 +13,7 @@ enum Typography {
     static func badgeReplica(scale: CGFloat) -> Font { .system(size: badgePointSize * scale, weight: .heavy) }
     static let menuBar = NSFont.systemFont(ofSize: 12, weight: .heavy)
     static let menuBarIcon = NSImage.SymbolConfiguration(pointSize: 14, weight: .bold)
-    static let dockIconSymbol = NSImage.SymbolConfiguration(pointSize: 420, weight: .bold)
+    static let dockIconSymbol = NSImage.SymbolConfiguration(pointSize: 360, weight: .bold)
     static let settingsPageTitle = Font.title2.weight(.bold)
     static let settingsPageIcon = Font.system(size: 16, weight: .semibold)
     static let settingsSidebarIcon = Font.system(size: 12, weight: .semibold)

@@ -17,9 +17,9 @@ MainActor.assumeIsolated {
         exit(0)
     }
 
-    // Build tooling: writes the app icon (the idle Dock icon) as a 1024 px PNG.
+    // Build tooling: writes the app icon (the muted Dock icon) as a 1024 px PNG.
     if let index = CommandLine.arguments.firstIndex(of: "--write-app-icon") {
-        guard let image = DockIcon.image(shown: nil, needsPermission: false),
+        guard let image = DockIcon.image(shown: .muted, needsPermission: false),
               let bitmap = image.representations.first as? NSBitmapImageRep,
               let png = bitmap.representation(using: .png, properties: [:]),
               (try? png.write(to: URL(fileURLWithPath: CommandLine.arguments[index + 1]))) != nil

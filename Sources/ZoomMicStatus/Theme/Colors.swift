@@ -11,9 +11,9 @@ enum Colors {
     static let live = NSColor(srgbRed: 0.09, green: 0.64, blue: 0.29, alpha: 1)
     /// No meeting: the Dock icon stays neutral.
     static let idle = NSColor(srgbRed: 0.42, green: 0.44, blue: 0.48, alpha: 1)
-    /// Lightens the top of the Dock icon, like the light falling on Apple's icons.
-    static let dockIconHighlight = NSColor.white
-    static let dockIconHighlightFraction: CGFloat = 0.2
+    /// The icon's dark "screen", lit slightly from the top.
+    static let dockIconTileTop = NSColor(srgbRed: 0.20, green: 0.21, blue: 0.24, alpha: 1)
+    static let dockIconTileBottom = NSColor(srgbRed: 0.08, green: 0.08, blue: 0.10, alpha: 1)
     static let dockIconShadow = NSColor.black.withAlphaComponent(0.3)
     /// Settings sidebar icon tiles, each a top-to-bottom gradient.
     static let pageGeneral = (NSColor(srgbRed: 0.60, green: 0.62, blue: 0.68, alpha: 1),

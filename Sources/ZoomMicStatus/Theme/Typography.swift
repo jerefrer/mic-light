@@ -7,6 +7,7 @@ enum Typography {
     static let badgeIcon = NSImage.SymbolConfiguration(pointSize: 22, weight: .heavy)
     static let menuBar = NSFont.systemFont(ofSize: 12, weight: .heavy)
     static let menuBarIcon = NSImage.SymbolConfiguration(pointSize: 14, weight: .bold)
+    static let dockIconSymbol = NSImage.SymbolConfiguration(pointSize: 420, weight: .bold)
     static let settingsTitle = Font.title2.weight(.semibold)
     static let settingsSubtitle = Font.callout
     static let settingsHeaderIcon = Font.system(size: 24, weight: .bold)

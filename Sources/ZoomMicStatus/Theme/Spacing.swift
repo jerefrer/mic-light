@@ -9,6 +9,12 @@ enum Spacing {
     static let badgeTopMargin: CGFloat = 12
     /// Squircle radius of the screen border's inner corners.
     static let borderInnerCornerRadius: CGFloat = 24
+    /// Dock icon drawn on Apple's 1024 pt app icon grid.
+    static let dockIconCanvas: CGFloat = 1024
+    static let dockIconInset: CGFloat = 100
+    static let dockIconCornerRadius: CGFloat = 260
+    static let dockIconShadowBlur: CGFloat = 24
+    static let dockIconShadowOffset: CGFloat = -10
     static let settingsWidth: CGFloat = 480
     static let settingsHeaderIconSize: CGFloat = 52
     static let settingsHeaderIconCornerRadius: CGFloat = 12

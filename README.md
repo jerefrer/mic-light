@@ -3,17 +3,18 @@
 A tiny macOS menu bar app that makes Zoom's microphone state impossible to
 miss: red when muted, green when live, hidden when no meeting is running.
 
-Three display modes, any combination can be enabled from the menu bar icon:
+Four indicators, any combination can be enabled in the settings or from the menu bar and Dock menus:
 
 | Mode | What it shows |
 |------|---------------|
 | Floating badge | A draggable red/green slab ("MIC MUTED" / "MIC LIVE") above every window, including full-screen Zoom |
 | Screen border | A red/green frame around every screen; clicks pass through it. Its inner corners follow the display's shape: squircles at the top and square at the bottom on notched MacBooks, square on other displays. Thickness (2–80 pt, default 10), opacity (default 75 %) and the fade toward the center (on by default) are set in the settings window |
-| Colored menu bar icon | A colored mic icon and label in the menu bar |
+| Menu bar icon | A colored mic icon in the menu bar, alone or with a label |
+| Dock icon | The app's Dock icon turns red or green; clicking it opens the settings |
 
-The menu bar icon itself is always there, since its menu leads to the
-settings; with the third mode off it stays a neutral mic glyph. It can show
-the icon alone or the icon with a label.
+The menu bar and Dock icons are also the way back into the app (their menus
+hold quick toggles and **Settings…**), so at least one of them always stays
+on. Outside meetings they show a neutral mic.
 
 ## Settings
 

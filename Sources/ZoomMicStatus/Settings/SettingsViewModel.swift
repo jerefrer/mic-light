@@ -56,6 +56,11 @@ final class SettingsViewModel: ObservableObject {
 
     func isEnabled(_ mode: DisplayModes) -> Bool { modes.contains(mode) }
 
+    /// False for the last way back into the app (menu bar or Dock icon).
+    func canToggle(_ mode: DisplayModes) -> Bool {
+        modeStore.canToggle(mode)
+    }
+
     func binding(for mode: DisplayModes) -> Binding<Bool> {
         Binding(
             get: { [weak self] in self?.modes.contains(mode) ?? false },

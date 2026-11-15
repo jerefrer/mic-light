@@ -34,7 +34,15 @@ public struct Strings: Sendable {
     public var displaySection: String { pick("Show the state with", "Afficher l'état avec") }
     public var badgeMode: String { pick("Floating badge", "Pastille flottante") }
     public var borderMode: String { pick("Screen border", "Bordure d'écran") }
-    public var menuBarMode: String { pick("Colored menu bar icon", "Icône colorée dans la barre des menus") }
+    public var menuBarMode: String { pick("Menu bar icon", "Icône dans la barre des menus") }
+    public var dockMode: String { pick("Dock icon", "Icône dans le Dock") }
+    public var waysBackHint: String {
+        pick("The menu bar icon or the Dock icon always stays on, so the app remains reachable.",
+             "L'icône de la barre des menus ou celle du Dock reste toujours active, pour pouvoir revenir à l'application.")
+    }
+    public var hide: String { pick("Hide Zoom Mic Status", "Masquer Zoom Mic Status") }
+    public var window: String { pick("Window", "Fenêtre") }
+    public var close: String { pick("Close", "Fermer") }
     public var borderWidth: String { pick("Thickness", "Épaisseur") }
     public var borderOpacity: String { pick("Opacity", "Opacité") }
     public var borderFade: String { pick("Fade toward the center", "Dégradé vers l'intérieur") }

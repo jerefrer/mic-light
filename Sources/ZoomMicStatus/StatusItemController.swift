@@ -1,13 +1,14 @@
 import AppKit
 import ZoomMicStatusCore
 
-/// The menu bar item: always present, since its menu leads to the settings.
-/// When the menu bar mode is on it also shows the state in color.
+/// The menu bar item, colored by the mic state. Its menu (also used as the
+/// Dock menu) holds the quick toggles and leads to the settings.
 @MainActor
 final class StatusItemController: NSObject, NSMenuDelegate {
     private let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private let strings: Strings
     private let modes: () -> DisplayModes
+    private let canToggle: (DisplayModes) -> Bool
     private let onToggleMode: (DisplayModes) -> Void
     private let onOpenSettings: () -> Void
     private var status: IndicatorStatus = .idle
@@ -15,16 +16,19 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     init(
         strings: Strings,
         modes: @escaping () -> DisplayModes,
+        canToggle: @escaping (DisplayModes) -> Bool,
         onToggleMode: @escaping (DisplayModes) -> Void,
         onOpenSettings: @escaping () -> Void
     ) {
         self.strings = strings
         self.modes = modes
+        self.canToggle = canToggle
         self.onToggleMode = onToggleMode
         self.onOpenSettings = onOpenSettings
         super.init()
         let menu = NSMenu()
         menu.delegate = self
+        menu.autoenablesItems = false
         item.menu = menu
     }
 
@@ -32,9 +36,10 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     /// real status while the settings window previews a simulated state.
     func show(status: IndicatorStatus, shown: MicState?, style: MenuBarStyle) {
         self.status = status
+        item.isVisible = modes().contains(.menuBar)
         guard let button = item.button else { return }
 
-        if let state = shown, modes().contains(.menuBar) {
+        if let state = shown {
             let color = Colors.signal(state)
             let config = Typography.menuBarIcon.applying(.init(paletteColors: [color]))
             button.image = Symbols.image(Symbols.mic(state), config)
@@ -59,6 +64,18 @@ final class StatusItemController: NSObject, NSMenuDelegate {
 
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
+        addItems(to: menu, includingQuit: true)
+    }
+
+    /// The Dock adds its own Quit item.
+    func makeDockMenu() -> NSMenu {
+        let menu = NSMenu()
+        menu.autoenablesItems = false
+        addItems(to: menu, includingQuit: false)
+        return menu
+    }
+
+    private func addItems(to menu: NSMenu, includingQuit: Bool) {
         menu.addItem(NSMenuItem(title: strings.statusLine(status), action: nil, keyEquivalent: ""))
 
         if status == .needsPermission {
@@ -70,10 +87,13 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         menu.addItem(modeItem(strings.badgeMode, .badge))
         menu.addItem(modeItem(strings.borderMode, .border))
         menu.addItem(modeItem(strings.menuBarMode, .menuBar))
+        menu.addItem(modeItem(strings.dockMode, .dock))
 
         menu.addItem(.separator())
         menu.addItem(action(strings.settings, #selector(openSettings), key: ","))
-        menu.addItem(action(strings.quit, #selector(NSApplication.terminate(_:)), key: "q"))
+        if includingQuit {
+            menu.addItem(action(strings.quit, #selector(NSApplication.terminate(_:)), key: "q"))
+        }
     }
 
     private func action(_ title: String, _ selector: Selector, key: String = "") -> NSMenuItem {
@@ -86,6 +106,7 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         let menuItem = action(title, #selector(toggleMode(_:)))
         menuItem.tag = mode.rawValue
         menuItem.state = modes().contains(mode) ? .on : .off
+        menuItem.isEnabled = canToggle(mode)
         return menuItem
     }
 

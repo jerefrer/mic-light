@@ -24,20 +24,27 @@ struct SettingsView: View {
                 hint(model.canSimulate ? strings.previewIdleHint : strings.previewMeetingHint)
             }
 
-            Section(strings.indicatorsSection) {
+            Section {
                 Toggle(strings.badgeMode, isOn: model.binding(for: .badge))
                 LabeledContent(strings.badgePosition) {
                     Button(strings.reset) { model.resetBadgePosition() }
                 }
                 .disabled(!model.isEnabled(.badge))
                 Toggle(strings.menuBarMode, isOn: model.binding(for: .menuBar))
+                    .disabled(!model.canToggle(.menuBar))
                 Picker(strings.menuBarStyle, selection: $model.menuBarStyle) {
                     ForEach(MenuBarStyle.allCases, id: \.self) { style in
                         Text(strings.menuBarStyleName(style)).tag(style)
                     }
                 }
                 .disabled(!model.isEnabled(.menuBar))
+                Toggle(strings.dockMode, isOn: model.binding(for: .dock))
+                    .disabled(!model.canToggle(.dock))
                 Toggle(strings.borderMode, isOn: model.binding(for: .border))
+            } header: {
+                Text(strings.indicatorsSection)
+            } footer: {
+                hint(strings.waysBackHint)
             }
 
             Section(strings.borderAppearanceSection) {

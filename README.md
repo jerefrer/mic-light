@@ -8,11 +8,21 @@ Three display modes, any combination can be enabled from the menu bar icon:
 | Mode | What it shows |
 |------|---------------|
 | Floating badge | A draggable red/green slab ("MIC MUTED" / "MIC LIVE") above every window, including full-screen Zoom |
-| Screen border | A red/green frame around every screen; clicks pass through it. Its inner corners follow the display's shape: squircles at the top and square at the bottom on notched MacBooks, square on other displays. Thickness (2–80 pt, default 10), opacity (default 75 %) and the fade toward the center (on by default) are set under **Border Settings**, with a live preview while that submenu is open |
+| Screen border | A red/green frame around every screen; clicks pass through it. Its inner corners follow the display's shape: squircles at the top and square at the bottom on notched MacBooks, square on other displays. Thickness (2–80 pt, default 10), opacity (default 75 %) and the fade toward the center (on by default) are set in the settings window |
 | Colored menu bar icon | A colored mic icon and label in the menu bar |
 
-The menu bar icon itself is always there, since its menu holds the settings;
-with the third mode off it stays a neutral mic glyph. The UI is in French
+The menu bar icon itself is always there, since its menu leads to the
+settings; with the third mode off it stays a neutral mic glyph. It can show
+the icon alone or the icon with a label.
+
+## Settings
+
+**Settings…** (⌘, in the menu) opens a settings window: display modes, menu
+bar style, badge position, border appearance, launch at login and the
+Accessibility status. While it is open, the real badge, border and menu bar
+icon preview every change on screen; outside meetings a *Simulate* switch
+shows either state, while during a meeting the preview always follows the
+real microphone. The UI is in French
 when the system language is French, English otherwise.
 
 ## How it works

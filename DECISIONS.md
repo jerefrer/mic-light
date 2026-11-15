@@ -79,3 +79,12 @@
 **Revisit if:** Apple ships rounded displays without a notch, or the user wants squircles on external displays.
 
 ---
+
+## 2026-11-15 — Settings window previews live on screen
+**Chosen:** User decision: a SwiftUI settings window whose preview is the real indicators on screen, shown for as long as the window is open; outside meetings a Simulate switch picks the state, during a meeting the preview follows the real microphone and the switch is disabled.
+**Alternatives:** A miniature desktop drawn inside the window; both.
+**Why:** The real overlays already redraw instantly, so a live preview costs little and is exact, where a miniature would only approximate them. Never letting a simulation override the real state during a meeting avoids the one failure this app exists to prevent: misreporting the microphone.
+**Trade-offs:** The window can hide part of what it previews (e.g. the badge, if dragged under it). The border sliders left the menu, so adjusting them now takes the window.
+**Revisit if:** Users want to tune indicators without having them on screen.
+
+---

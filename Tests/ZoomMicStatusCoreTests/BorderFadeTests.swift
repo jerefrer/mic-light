@@ -38,3 +38,15 @@ struct BorderFadeTests {
         #expect(abs(depth(width + radius, 3) - 0.3) < 0.01)
     }
 }
+
+struct SquareCornerFadeTests {
+    @Test func shouldFollowTheNearestEdgeInASquareCorner() {
+        let depth = BorderFade.depth(x: 2, y: 5, width: 10, cornerRadius: 0)
+
+        #expect(abs(depth - 0.2) < 0.01)
+    }
+
+    @Test func shouldEndExactlyAtTheSquareInnerCorner() {
+        #expect(BorderFade.depth(x: 11, y: 11, width: 10, cornerRadius: 0) == 1)
+    }
+}

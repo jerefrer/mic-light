@@ -70,3 +70,12 @@
 **Revisit if:** Zoom changes tile descriptions, or the learning proves slow in practice (a display-name hint could seed it).
 
 ---
+
+## 2026-11-15 — Border corners follow the display's shape
+**Chosen:** User decision: the border's inner corners mirror the physical display: squircle top corners and square bottom corners on notched MacBook displays, square corners elsewhere. A notch is detected by `NSScreen.safeAreaInsets.top > 0`.
+**Alternatives:** Squircle inner corners on every display (previous behavior).
+**Why:** The border reads as part of the screen when its inner edge parallels the panel's own outline; notched MacBook panels (MacBook Pro 14/16 from 2021, MacBook Air from 2022) have rounded top and square bottom corners, while iMac, external and older MacBook panels are rectangular.
+**Trade-offs:** The display corner radius itself is not exposed by macOS, so the inner radius stays a fixed 24 pt rather than matching the panel exactly. A rounded display without a notch would get square corners.
+**Revisit if:** Apple ships rounded displays without a notch, or the user wants squircles on external displays.
+
+---

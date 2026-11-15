@@ -51,3 +51,32 @@ struct SquircleTests {
         #expect(points.allSatisfy { rect.insetBy(dx: -1e-9, dy: -1e-9).contains($0) })
     }
 }
+
+struct SquircleCornerTests {
+    let rect = CGRect(x: 0, y: 0, width: 200, height: 100)
+
+    @Test func shouldKeepSquareCornersWhereTheRadiusIsZero() {
+        let points = Squircle.outline(of: rect, cornerRadii: CornerRadii(top: 30, bottom: 0))
+
+        #expect(points.contains(CGPoint(x: rect.minX, y: rect.minY)))
+        #expect(points.contains(CGPoint(x: rect.maxX, y: rect.minY)))
+        #expect(!points.contains(CGPoint(x: rect.minX, y: rect.maxY)))
+        #expect(!points.contains(CGPoint(x: rect.maxX, y: rect.maxY)))
+    }
+
+    @Test func shouldMatchTheOutlineDrawnWithOneRadiusEverywhere() {
+        let uniform = Squircle.outline(of: rect, cornerRadius: 30)
+
+        #expect(Squircle.outline(of: rect, cornerRadii: CornerRadii(top: 30, bottom: 30)) == uniform)
+    }
+}
+
+struct DisplayCornersTests {
+    @Test func shouldRoundOnlyTheTopCornersOfANotchedDisplay() {
+        #expect(CornerRadii.followingDisplay(hasNotch: true, radius: 24) == CornerRadii(top: 24, bottom: 0))
+    }
+
+    @Test func shouldKeepEveryCornerSquareOnARectangularDisplay() {
+        #expect(CornerRadii.followingDisplay(hasNotch: false, radius: 24) == CornerRadii(top: 0, bottom: 0))
+    }
+}

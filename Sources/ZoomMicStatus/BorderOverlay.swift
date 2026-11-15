@@ -54,7 +54,10 @@ final class BorderOverlay {
         window.isOpaque = false
         window.backgroundColor = .clear
         window.hasShadow = false
-        let view = BorderView()
+        // Only notched displays report a top safe-area inset.
+        let view = BorderView(cornerRadii: .followingDisplay(
+            hasNotch: screen.safeAreaInsets.top > 0, radius: Spacing.borderInnerCornerRadius
+        ))
         view.style = style
         window.contentView = view
         window.setFrame(screen.frame, display: false)
@@ -71,7 +74,17 @@ private final class BorderView: NSView {
         didSet { needsDisplay = true }
     }
 
-    private var cachedCorner: (key: CornerKey, image: CGImage)?
+    /// The inner edge's corners follow the display's own shape.
+    private let cornerRadii: CornerRadii
+    private var cachedCorners: [CornerKey: CGImage] = [:]
+
+    init(cornerRadii: CornerRadii) {
+        self.cornerRadii = cornerRadii
+        super.init(frame: .zero)
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
 
     override func draw(_ dirtyRect: NSRect) {
         let width = CGFloat(style.width)
@@ -86,14 +99,15 @@ private final class BorderView: NSView {
             return
         }
 
-        // Straight sides are plain linear gradients; the four corners, where
-        // the inner edge curves, are one per-pixel image mirrored into place.
+        // Straight sides are plain linear gradients; each corner, where the
+        // inner edge may curve, is a per-pixel image mirrored into place.
         let scale = window?.backingScaleFactor ?? 2
-        let cornerPixels = Int(((width + Spacing.borderInnerCornerRadius) * scale).rounded(.up))
+        let cornerPixels = Int(((width + max(cornerRadii.top, cornerRadii.bottom)) * scale).rounded(.up))
         let cornerSide = CGFloat(cornerPixels) / scale
         guard let context = NSGraphicsContext.current?.cgContext,
               let gradient = NSGradient(starting: color.withAlphaComponent(opacity), ending: color.withAlphaComponent(0)),
-              let corner = cornerImage(pixels: cornerPixels, scale: scale)
+              let bottomCorner = cornerImage(radius: cornerRadii.bottom, pixels: cornerPixels, scale: scale),
+              let topCorner = cornerImage(radius: cornerRadii.top, pixels: cornerPixels, scale: scale)
         else { return }
 
         let b = bounds
@@ -105,10 +119,11 @@ private final class BorderView: NSView {
         gradient.draw(in: NSRect(x: b.maxX - width, y: b.minY + cornerSide, width: width, height: across), angle: 180)
 
         context.interpolationQuality = .none
-        let mirrors: [(CGFloat, CGFloat, CGFloat, CGFloat)] = [
-            (b.minX, b.minY, 1, 1), (b.maxX, b.minY, -1, 1), (b.minX, b.maxY, 1, -1), (b.maxX, b.maxY, -1, -1),
+        let mirrors: [(CGImage, CGFloat, CGFloat, CGFloat, CGFloat)] = [
+            (bottomCorner, b.minX, b.minY, 1, 1), (bottomCorner, b.maxX, b.minY, -1, 1),
+            (topCorner, b.minX, b.maxY, 1, -1), (topCorner, b.maxX, b.maxY, -1, -1),
         ]
-        for (x, y, flipX, flipY) in mirrors {
+        for (corner, x, y, flipX, flipY) in mirrors {
             context.saveGState()
             context.translateBy(x: x, y: y)
             context.scaleBy(x: flipX, y: flipY)
@@ -117,10 +132,10 @@ private final class BorderView: NSView {
         }
     }
 
-    /// The bottom-left corner, one opacity per pixel from `BorderFade`.
-    private func cornerImage(pixels: Int, scale: CGFloat) -> CGImage? {
-        let key = CornerKey(style: style, color: color, pixels: pixels, scale: scale)
-        if let cached = cachedCorner, cached.key == key { return cached.image }
+    /// A bottom-left corner, one opacity per pixel from `BorderFade`.
+    private func cornerImage(radius: CGFloat, pixels: Int, scale: CGFloat) -> CGImage? {
+        let key = CornerKey(style: style, color: color, radius: radius, pixels: pixels, scale: scale)
+        if let cached = cachedCorners[key] { return cached }
 
         guard let rgb = color.usingColorSpace(.sRGB), let space = CGColorSpace(name: CGColorSpace.sRGB) else {
             return nil
@@ -132,7 +147,7 @@ private final class BorderView: NSView {
             for column in 0..<pixels {
                 let x = (Double(column) + 0.5) / scale
                 let depth = BorderFade.depth(
-                    x: x, y: y, width: style.width, cornerRadius: Double(Spacing.borderInnerCornerRadius)
+                    x: x, y: y, width: style.width, cornerRadius: Double(radius)
                 )
                 let alpha = style.opacity * (1 - depth)
                 let offset = (row * pixels + column) * 4
@@ -150,15 +165,18 @@ private final class BorderView: NSView {
                   provider: provider, decode: nil, shouldInterpolate: false, intent: .defaultIntent
               )
         else { return nil }
-        cachedCorner = (key, image)
+        // Only the current style matters: drop corners of earlier ones.
+        cachedCorners = cachedCorners.filter { $0.key.style == style && $0.key.color == color }
+        cachedCorners[key] = image
         return image
     }
 
-    /// Square at the screen edge, growing to the full corner radius at the
+    /// Square at the screen edge, growing to the full corner radii at the
     /// border's inner edge.
     private func outline(inset: CGFloat, width: CGFloat) -> NSBezierPath {
-        let radius = Spacing.borderInnerCornerRadius * inset / width
-        let points = Squircle.outline(of: bounds.insetBy(dx: inset, dy: inset), cornerRadius: radius)
+        let points = Squircle.outline(
+            of: bounds.insetBy(dx: inset, dy: inset), cornerRadii: cornerRadii.scaled(by: inset / width)
+        )
         let path = NSBezierPath()
         path.move(to: points[0])
         points.dropFirst().forEach(path.line(to:))
@@ -167,9 +185,10 @@ private final class BorderView: NSView {
     }
 }
 
-private struct CornerKey: Equatable {
+private struct CornerKey: Hashable {
     let style: BorderStyle
     let color: NSColor
+    let radius: CGFloat
     let pixels: Int
     let scale: CGFloat
 }

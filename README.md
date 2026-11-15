@@ -8,7 +8,7 @@ Three display modes, any combination can be enabled from the menu bar icon:
 | Mode | What it shows |
 |------|---------------|
 | Floating badge | A draggable red/green slab ("MIC MUTED" / "MIC LIVE") above every window, including full-screen Zoom |
-| Screen border | A red/green frame around every screen; clicks pass through it. Its inner corners are squircles. Thickness (2–80 pt, default 10), opacity (default 75 %) and the fade toward the center (on by default) are set under **Border Settings**, with a live preview while that submenu is open |
+| Screen border | A red/green frame around every screen; clicks pass through it. Its inner corners follow the display's shape: squircles at the top and square at the bottom on notched MacBooks, square on other displays. Thickness (2–80 pt, default 10), opacity (default 75 %) and the fade toward the center (on by default) are set under **Border Settings**, with a live preview while that submenu is open |
 | Colored menu bar icon | A colored mic icon and label in the menu bar |
 
 The menu bar icon itself is always there, since its menu holds the settings;

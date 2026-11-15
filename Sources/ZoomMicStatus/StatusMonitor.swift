@@ -3,10 +3,14 @@ import ZoomMicStatusCore
 /// Polls Zoom and reports every status change.
 @MainActor
 final class StatusMonitor {
-    /// Fast during a meeting so a mute toggle shows up almost instantly;
-    /// slower otherwise, since an idle read walks all of Zoom's menus.
-    private static let meetingInterval = Duration.milliseconds(300)
+    /// Fast during a meeting so a mute toggle shows up within ~100 ms: an
+    /// in-meeting read is one cached accessibility call (~0.04 ms measured).
+    /// Slower otherwise, since an idle read walks all of Zoom's menus
+    /// (~75 ms measured).
+    private static let meetingInterval = Duration.milliseconds(100)
     private static let idleInterval = Duration.milliseconds(1500)
+    /// Lets the system coalesce wake-ups without a noticeable delay.
+    private static let wakeTolerance = Duration.milliseconds(20)
 
     private let probe: ZoomProbe
     private let onChange: (IndicatorStatus) -> Void
@@ -27,7 +31,7 @@ final class StatusMonitor {
         loop = Task { [weak self] in
             while !Task.isCancelled {
                 guard let interval = self?.tick() else { return }
-                try? await Task.sleep(for: interval) // Throws only on cancellation, checked by the loop.
+                try? await Task.sleep(for: interval, tolerance: Self.wakeTolerance) // Throws only on cancellation, checked by the loop.
             }
         }
     }

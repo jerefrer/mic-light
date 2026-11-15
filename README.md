@@ -25,7 +25,7 @@ muted. The titles are loaded at launch from every localization inside
 
 It only *reads* the menu. It never presses an item or sends input to Zoom.
 
-Polling runs every 300 ms during a meeting and every 1.5 s otherwise; the item
+Polling runs every 100 ms during a meeting and every 1.5 s otherwise; the item
 found is cached, so an in-meeting read is a single accessibility call.
 
 ## Requirements

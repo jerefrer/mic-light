@@ -1,5 +1,5 @@
 #!/bin/sh
-# Builds "Zoom Mic Status.app" into build/, signed with the Developer ID
+# Builds "Mic Light.app" into build/, signed with the Developer ID
 # (hardened runtime, as notarization requires) when it is in the keychain,
 # ad hoc otherwise.
 # Usage: scripts/build-app.sh [--install]   (--install copies it to ~/Applications)
@@ -7,10 +7,12 @@ set -eu
 
 cd "$(dirname "$0")/.."
 
-APP_NAME="Zoom Mic Status"
+APP_NAME="Mic Light"
+# Kept from the app's first name, Zoom Mic Status: changing it would lose the
+# users' settings and Accessibility grant, and break update continuity.
 BUNDLE_ID="com.jerefrer.zoom-mic-status"
 VERSION="$(cat VERSION)"
-FEED_URL="https://github.com/jerefrer/zoom-mic-status/releases/latest/download/appcast.xml"
+FEED_URL="https://github.com/jerefrer/mic-light/releases/latest/download/appcast.xml"
 SPARKLE_PUBLIC_KEY="Tm3jGamXB+xoCj7tp6J8LZ8D1uAEttdZz/S5F0fQ4Lw="
 SIGN_IDENTITY="${SIGN_IDENTITY:-Developer ID Application: Jeremy Frere (3J4HCZ8V25)}"
 APP="build/$APP_NAME.app"

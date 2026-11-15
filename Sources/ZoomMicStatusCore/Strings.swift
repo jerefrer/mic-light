@@ -40,7 +40,7 @@ public struct Strings: Sendable {
         pick("The menu bar icon or the Dock icon always stays on, so the app remains reachable.",
              "L'icône de la barre des menus ou celle du Dock reste toujours active, pour pouvoir revenir à l'application.")
     }
-    public var hide: String { pick("Hide Zoom Mic Status", "Masquer Zoom Mic Status") }
+    public var hide: String { pick("Hide Mic Light", "Masquer Mic Light") }
     public var window: String { pick("Window", "Fenêtre") }
     public var close: String { pick("Close", "Fermer") }
     public var borderWidth: String { pick("Thickness", "Épaisseur") }
@@ -51,8 +51,8 @@ public struct Strings: Sendable {
     public var grantAccess: String { pick("Grant Accessibility Access…", "Autoriser l'accès Accessibilité…") }
     public var launchAtLogin: String { pick("Launch at Login", "Ouvrir à la connexion") }
     public var settings: String { pick("Settings…", "Réglages…") }
-    public var settingsTitle: String { pick("Zoom Mic Status Settings", "Réglages de Zoom Mic Status") }
-    public var appName: String { "Zoom Mic Status" }
+    public var settingsTitle: String { pick("Mic Light Settings", "Réglages de Mic Light") }
+    public var appName: String { "Mic Light" }
     public var previewSection: String { pick("Preview", "Aperçu") }
     public var simulate: String { pick("Simulate", "Simuler") }
     public func stateName(_ state: MicState) -> String {
@@ -150,5 +150,5 @@ public struct Strings: Sendable {
     public var checkAutomatically: String {
         pick("Check for updates automatically", "Rechercher automatiquement les mises à jour")
     }
-    public var quit: String { pick("Quit Zoom Mic Status", "Quitter Zoom Mic Status") }
+    public var quit: String { pick("Quit Mic Light", "Quitter Mic Light") }
 }

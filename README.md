@@ -1,8 +1,10 @@
 <p align="center">
-  <img src="docs/images/icon.png" width="128" height="128" alt="Zoom Mic Status icon">
+  <img src="docs/images/icon.png" width="128" height="128" alt="Mic Light icon">
 </p>
 
-<h1 align="center">Zoom Mic Status</h1>
+<h1 align="center">Mic Light</h1>
+
+<p align="center"><i>for Zoom</i></p>
 
 <p align="center">
   Know at a glance whether Zoom can hear you.<br>
@@ -10,9 +12,9 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/jerefrer/zoom-mic-status/releases/latest/download/ZoomMicStatus.dmg"><b>Download for macOS</b></a>
+  <a href="https://github.com/jerefrer/mic-light/releases/latest/download/MicLight.dmg"><b>Download for macOS</b></a>
   ·
-  <a href="https://jerefrer.github.io/zoom-mic-status/">Website</a>
+  <a href="https://jerefrer.github.io/mic-light/">Website</a>
   ·
   macOS 15+ · signed &amp; notarized · updates itself
 </p>
@@ -44,15 +46,15 @@ of your own desktop.
 
 ## Install
 
-1. [Download the DMG](https://github.com/jerefrer/zoom-mic-status/releases/latest/download/ZoomMicStatus.dmg) and drag *Zoom Mic Status* to Applications.
-2. Open it, choose **Grant Accessibility Access…** in its menu, and enable *Zoom Mic Status* in System Settings → Privacy & Security → Accessibility.
+1. [Download the DMG](https://github.com/jerefrer/mic-light/releases/latest/download/MicLight.dmg) and drag *Mic Light* to Applications.
+2. Open it, choose **Grant Accessibility Access…** in its menu, and enable *Mic Light* in System Settings → Privacy & Security → Accessibility.
 
 It then updates itself: it checks for a new version once a day, or on demand
 with **Check for Updates…**.
 
 ## Private by design
 
-Zoom has no public API for the desktop app's mute state, so Zoom Mic Status
+Zoom has no public API for the desktop app's mute state, so Mic Light
 reads what Zoom shows through the macOS Accessibility API: the **Meeting → Mute
 audio / Unmute audio** menu and your own participant tile. It never clicks,
 types or sends anything to Zoom, and nothing leaves your Mac.
@@ -81,7 +83,7 @@ Requires macOS 15 and the Xcode command line tools (Swift 6).
 
 ```sh
 swift test                      # unit tests (detection and settings logic)
-scripts/build-app.sh            # builds build/Zoom Mic Status.app
+scripts/build-app.sh            # builds build/Mic Light.app
 scripts/build-app.sh --install  # also copies it to ~/Applications
 ```
 
@@ -91,7 +93,7 @@ accessibility adapter. The app is signed with the Developer ID when it is in
 the keychain, ad hoc otherwise; the version comes from the `VERSION` file.
 
 ```sh
-"build/Zoom Mic Status.app/Contents/MacOS/ZoomMicStatus" --print-status
+"build/Mic Light.app/Contents/MacOS/ZoomMicStatus" --print-status
 ```
 
 prints the detected status once (`mic(muted)`, `mic(live)`, `idle` or
@@ -119,4 +121,9 @@ script builds the app, packs it in a DMG that Apple notarizes, signs the DMG
 for Sparkle, writes `appcast.xml`, commits and tags the version, pushes, and
 publishes a GitHub release with both files. Installed copies read
 `releases/latest/download/appcast.xml`, so the newest release is always the
-feed, and `releases/latest/download/ZoomMicStatus.dmg` always downloads it.
+feed, and `releases/latest/download/MicLight.dmg` always downloads it.
+
+---
+
+Mic Light is not affiliated with Zoom. Zoom is a trademark of Zoom
+Communications, Inc.

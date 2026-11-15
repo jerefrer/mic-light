@@ -106,3 +106,12 @@
 **Revisit if:** Releases should run from CI, or the repository has to stay private.
 
 ---
+
+## 2026-11-15 — Renamed to Mic Light ("for Zoom")
+**Chosen:** User decision: the visible name becomes "Mic Light", with "for Zoom" as a descriptor; repository `jerefrer/mic-light`, site `jerefrer.github.io/mic-light`, DMG `MicLight.dmg`. The bundle identifier (`com.jerefrer.zoom-mic-status`), Swift module names, log subsystem and Sparkle key account stay as they were.
+**Alternatives:** Keeping "Zoom Mic Status"; On Air, Hot Mic, MicSignal.
+**Why:** Zoom's brand guidelines forbid using the Zoom mark in a product name, while its developer docs allow "… for Zoom" to state compatibility. Renaming before the site gets indexed avoids losing it, since GitHub Pages does not redirect after a repository rename. Keeping the bundle identifier preserves users' settings, the Accessibility grant and Sparkle continuity; installed copies still reach the feed through GitHub's repository redirect.
+**Trade-offs:** Internal names no longer match the product name. Installed copies may keep the old file name ("Zoom Mic Status.app") after updating in place.
+**Revisit if:** GitHub stops redirecting the old repository URL before every install has updated.
+
+---

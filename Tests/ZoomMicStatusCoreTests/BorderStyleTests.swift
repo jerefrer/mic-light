@@ -7,10 +7,10 @@ struct BorderStyleTests {
         UserDefaults(suiteName: "BorderStyleTests-\(UUID().uuidString)")!
     }
 
-    @Test func shouldDefaultToSolidTenPointBorderWhenNothingSaved() {
+    @Test func shouldDefaultToTenPointFadingBorderAtSeventyFivePercentWhenNothingSaved() {
         let store = BorderStyleStore(defaults: makeDefaults())
 
-        #expect(store.style == BorderStyle(width: 10, opacity: 1, fades: false))
+        #expect(store.style == BorderStyle(width: 10, opacity: 0.75, fades: true))
     }
 
     @Test func shouldPersistStyle() {

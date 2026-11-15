@@ -4,7 +4,7 @@ import Foundation
 public struct BorderStyle: Equatable, Sendable {
     public static let widthRange: ClosedRange<Double> = 2...80
     public static let opacityRange: ClosedRange<Double> = 0.1...1
-    public static let standard = BorderStyle(width: 10, opacity: 1, fades: false)
+    public static let standard = BorderStyle(width: 10, opacity: 0.75, fades: true)
 
     /// Thickness in points.
     public let width: Double

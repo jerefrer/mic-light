@@ -2,10 +2,12 @@
 # Publishes a release that installed copies pick up through Sparkle.
 # Usage: scripts/release.sh 0.2.0
 #
-# Builds and signs the app (Developer ID), has Apple notarize it, signs the
-# archive with the Sparkle key kept in the login keychain (account
-# "zoom-mic-status"), then publishes a GitHub release holding the archive and
-# appcast.xml, the feed every installed copy reads (SUFeedURL).
+# Builds and signs the app (Developer ID), packs it in a drag-to-Applications
+# DMG that Apple notarizes, signs the DMG with the Sparkle key kept in the
+# login keychain (account "zoom-mic-status"), then publishes a GitHub release
+# holding the DMG and appcast.xml, the feed every installed copy reads
+# (SUFeedURL). The DMG name never changes, so
+# releases/latest/download/ZoomMicStatus.dmg always serves the newest one.
 set -eu
 
 cd "$(dirname "$0")/.."
@@ -14,7 +16,8 @@ VERSION="${1:?usage: scripts/release.sh <version>, e.g. 0.2.0}"
 REPO="jerefrer/zoom-mic-status"
 TAG="v$VERSION"
 APP="build/Zoom Mic Status.app"
-ZIP="build/ZoomMicStatus-$VERSION.zip"
+DMG="build/ZoomMicStatus.dmg"
+SIGN_IDENTITY="${SIGN_IDENTITY:-Developer ID Application: Jeremy Frere (3J4HCZ8V25)}"
 # notarytool credentials are per Apple ID, not per app: Imprint's profile works.
 NOTARY_PROFILE="${NOTARY_PROFILE:-imprint-notarize}"
 SIGN_UPDATE=".build/artifacts/sparkle/Sparkle/bin/sign_update"
@@ -27,17 +30,24 @@ fi
 echo "$VERSION" > VERSION
 scripts/build-app.sh
 
-# Notarize the app, staple the ticket, then archive the stapled app.
-rm -f "$ZIP"
-ditto -c -k --keepParent "$APP" "$ZIP"
-xcrun notarytool submit "$ZIP" --keychain-profile "$NOTARY_PROFILE" --wait
-xcrun stapler staple "$APP"
-rm -f "$ZIP"
-ditto -c -k --keepParent "$APP" "$ZIP"
-spctl --assess --type execute -vv "$APP"
+# The DMG shows the app next to a shortcut to Applications; a
+# .VolumeIcon.icns at its root gives the mounted volume the app icon.
+STAGE="$(mktemp -d)"
+cp -R "$APP" "$STAGE/"
+ln -s /Applications "$STAGE/Applications"
+cp "$APP/Contents/Resources/AppIcon.icns" "$STAGE/.VolumeIcon.icns"
+rm -f "$DMG"
+hdiutil create -volname "Zoom Mic Status" -srcfolder "$STAGE" -ov -format UDZO "$DMG" >/dev/null
+rm -rf "$STAGE"
+codesign --force --timestamp --sign "$SIGN_IDENTITY" "$DMG"
+
+# Notarizing the DMG covers the app inside it.
+xcrun notarytool submit "$DMG" --keychain-profile "$NOTARY_PROFILE" --wait
+xcrun stapler staple "$DMG"
+spctl --assess --type open --context context:primary-signature -vv "$DMG"
 
 # Prints: sparkle:edSignature="..." length="..."
-SIGNATURE="$("$SIGN_UPDATE" --account zoom-mic-status "$ZIP")"
+SIGNATURE="$("$SIGN_UPDATE" --account zoom-mic-status "$DMG")"
 cat > build/appcast.xml <<XML
 <?xml version="1.0" encoding="utf-8"?>
 <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
@@ -49,7 +59,7 @@ cat > build/appcast.xml <<XML
       <sparkle:version>$VERSION</sparkle:version>
       <sparkle:shortVersionString>$VERSION</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
-      <enclosure url="https://github.com/$REPO/releases/download/$TAG/ZoomMicStatus-$VERSION.zip"
+      <enclosure url="https://github.com/$REPO/releases/download/$TAG/ZoomMicStatus.dmg"
                  type="application/octet-stream" $SIGNATURE />
     </item>
   </channel>
@@ -61,7 +71,7 @@ git add VERSION
 git diff --cached --quiet || git commit -m "chore(release): $TAG"
 git tag -a "$TAG" -m "Zoom Mic Status $VERSION"
 git push origin HEAD --follow-tags
-gh release create "$TAG" "$ZIP" build/appcast.xml \
+gh release create "$TAG" "$DMG" build/appcast.xml \
     --repo "$REPO" --title "Zoom Mic Status $VERSION" --generate-notes
 
 echo "Released $TAG"

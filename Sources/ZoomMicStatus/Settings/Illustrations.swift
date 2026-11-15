@@ -28,6 +28,8 @@ struct MiniDesktop: View {
     var showsDock = false
     /// Indicators that are switched off are still drawn, faded.
     var fadesDisabled = true
+    /// Keeps the settings below visible; the showcase renderer lifts it.
+    var maxHeight = Spacing.illustrationMaxHeight
 
     private var aspectRatio: CGFloat {
         model.screenFrame.height > 0 ? model.screenFrame.width / model.screenFrame.height : 16 / 10
@@ -64,7 +66,7 @@ struct MiniDesktop: View {
         .aspectRatio(aspectRatio, contentMode: .fit)
         .clipShape(RoundedRectangle(cornerRadius: Spacing.illustrationCornerRadius, style: .continuous))
         .shadow(color: Color(nsColor: Colors.illustrationShadow), radius: Spacing.illustrationShadowRadius)
-        .frame(maxHeight: Spacing.illustrationMaxHeight)
+        .frame(maxHeight: maxHeight)
         .frame(maxWidth: .infinity)
     }
 

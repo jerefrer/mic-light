@@ -7,7 +7,14 @@ struct SettingsView: View {
     @ObservedObject var model: SettingsViewModel
     @ObservedObject var updater: Updater
     let strings: Strings
-    @State private var page: SettingsPage? = .general
+    @State private var page: SettingsPage?
+
+    init(model: SettingsViewModel, updater: Updater, strings: Strings, initialPage: SettingsPage = .general) {
+        self.model = model
+        self.updater = updater
+        self.strings = strings
+        _page = State(initialValue: initialPage)
+    }
 
     // A hand-built sidebar rather than NavigationSplitView, which ignored
     // the requested column width and truncated the page titles.

@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Zoom Mic Status — know if Zoom can hear you</title>
+  <meta name="description" content="A free macOS app that shows your Zoom microphone state in red or green: a floating badge, a screen border, the menu bar and the Dock.">
+  <link rel="icon" type="image/png" href="images/icon.png">
+  <meta property="og:title" content="Zoom Mic Status">
+  <meta property="og:description" content="Know at a glance whether Zoom can hear you.">
+  <meta property="og:image" content="https://jerefrer.github.io/zoom-mic-status/images/desktop-muted.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --muted: #e3212a;
+      --live: #17a34a;
+      --ink: #24262c;
+      --slate: #5d6271;
+      --mist: #f1f2f5;
+      --paper: #ffffff;
+      --line: #e2e4ea;
+      --signal: var(--muted);
+      --frame: 22px;
+      --radius: 14px;
+      --measure: 62ch;
+      --page: 1080px;
+      font-family: "Instrument Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--ink);
+      background: var(--paper);
+    }
+    :root[data-state="live"] { --signal: var(--live); }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--paper); line-height: 1.55; font-size: 17px; }
+    img { max-width: 100%; height: auto; display: block; }
+    a { color: inherit; }
+    :focus-visible { outline: 3px solid var(--signal); outline-offset: 3px; border-radius: 6px; }
+
+    /* The page wears the app's own border: a frame fading toward the center. */
+    .frame {
+      position: fixed; inset: 0; pointer-events: none; z-index: 10;
+      box-shadow: inset 0 0 calc(var(--frame) * 1.6) calc(var(--frame) * 0.35) var(--signal);
+      opacity: 0.85;
+      transition: box-shadow 0.35s ease;
+    }
+
+    .wrap { max-width: var(--page); margin: 0 auto; padding: 0 28px; }
+
+    header.top { display: flex; align-items: center; justify-content: space-between; padding: 34px 0 0; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; text-decoration: none; }
+    .brand img { width: 30px; height: 30px; }
+    .top nav a { color: var(--slate); text-decoration: none; font-weight: 500; }
+    .top nav a:hover { color: var(--ink); }
+
+    .hero { text-align: center; padding: 72px 0 40px; }
+    .hero .icon { width: 140px; height: 140px; margin: 0 auto 26px; }
+    h1 {
+      font-size: clamp(2.6rem, 6.5vw, 4.6rem); line-height: 1.02; letter-spacing: -0.035em;
+      font-weight: 700; margin: 0 auto 20px; max-width: 14ch;
+    }
+    .lede { font-size: 1.2rem; color: var(--slate); max-width: 46ch; margin: 0 auto 34px; }
+
+    .demo {
+      display: inline-flex; padding: 4px; border-radius: 999px; background: var(--mist);
+      border: 1px solid var(--line); margin-bottom: 30px;
+    }
+    .demo button {
+      font: inherit; font-weight: 600; border: 0; background: transparent; color: var(--slate);
+      padding: 9px 22px; border-radius: 999px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+    }
+    .demo button .dot { width: 9px; height: 9px; border-radius: 50%; background: currentColor; }
+    .demo button[aria-pressed="true"][data-state="muted"] { background: var(--muted); color: var(--paper); }
+    .demo button[aria-pressed="true"][data-state="live"] { background: var(--live); color: var(--paper); }
+
+    .actions { display: flex; flex-wrap: wrap; gap: 14px 24px; justify-content: center; align-items: center; }
+    .download {
+      background: var(--ink); color: var(--paper); text-decoration: none; font-weight: 600;
+      padding: 15px 28px; border-radius: 12px; font-size: 1.05rem;
+    }
+    .download:hover { background: #000; }
+    .actions .quiet { color: var(--slate); font-weight: 500; }
+    .fineprint { color: var(--slate); font-size: 0.92rem; margin-top: 16px; }
+
+    .showcase { padding: 24px 0 56px; }
+    .showcase img { width: 100%; }
+    .showcase [hidden] { display: none; }
+
+    section.block { padding: 64px 0; border-top: 1px solid var(--line); }
+    h2 { font-size: clamp(1.7rem, 3.2vw, 2.3rem); letter-spacing: -0.02em; line-height: 1.15; margin: 0 0 14px; }
+    .block > .wrap > p.intro { color: var(--slate); max-width: var(--measure); margin: 0 0 36px; font-size: 1.08rem; }
+
+    .indicators { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 34px 56px; margin: 0; }
+    .indicators div { border-left: 3px solid var(--signal); padding-left: 18px; transition: border-color 0.35s ease; }
+    .indicators dt { font-weight: 700; font-size: 1.1rem; margin-bottom: 4px; }
+    .indicators dd { margin: 0; color: var(--slate); max-width: 44ch; }
+
+    .shots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; margin-top: 8px; }
+    .shots figure { margin: 0; }
+    .shots img { border-radius: var(--radius); box-shadow: 0 18px 40px -22px rgba(20, 22, 30, 0.45); }
+    .shots figcaption { color: var(--slate); font-size: 0.95rem; margin-top: 12px; }
+
+    .split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 56px; }
+    .split p { color: var(--slate); max-width: var(--measure); margin: 0 0 14px; }
+    .stat { font-size: clamp(2.4rem, 5vw, 3.4rem); font-weight: 700; letter-spacing: -0.03em; line-height: 1; margin: 6px 0 10px; }
+
+    ol.steps { margin: 0; padding: 0; list-style: none; counter-reset: step; display: grid; gap: 22px; max-width: var(--measure); }
+    ol.steps li { counter-increment: step; display: grid; grid-template-columns: 40px 1fr; gap: 14px; color: var(--slate); }
+    ol.steps li::before {
+      content: counter(step); width: 32px; height: 32px; border-radius: 50%; background: var(--mist);
+      color: var(--ink); font-weight: 700; display: grid; place-items: center;
+    }
+    ol.steps strong { color: var(--ink); }
+
+    footer { border-top: 1px solid var(--line); padding: 36px 0 56px; color: var(--slate); font-size: 0.92rem; }
+    footer .wrap { display: flex; flex-wrap: wrap; gap: 10px 28px; justify-content: space-between; }
+
+    @media (max-width: 760px) {
+      :root { --frame: 14px; }
+      body { font-size: 16px; }
+      .wrap { padding: 0 16px; }
+      .hero { padding-top: 48px; }
+      .indicators, .shots, .split { grid-template-columns: 1fr; gap: 28px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .frame, .indicators div { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="frame" aria-hidden="true"></div>
+
+  <div class="wrap">
+    <header class="top">
+      <a class="brand" href="./"><img src="images/icon.png" alt="">Zoom Mic Status</a>
+      <nav><a href="https://github.com/jerefrer/zoom-mic-status">Source on GitHub</a></nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <img class="icon" src="images/icon.png" alt="Zoom Mic Status icon: a dark screen framed in red with a crossed-out microphone">
+        <h1>Know if Zoom can hear you.</h1>
+        <p class="lede">A red or green signal you can't miss: around your screen, above your windows, in the menu bar and in the Dock.</p>
+
+        <div class="demo" role="group" aria-label="Preview a microphone state">
+          <button type="button" data-state="muted" aria-pressed="true"><span class="dot"></span>Muted</button>
+          <button type="button" data-state="live" aria-pressed="false"><span class="dot"></span>Live</button>
+        </div>
+
+        <div class="actions">
+          <a class="download" href="https://github.com/jerefrer/zoom-mic-status/releases/latest/download/ZoomMicStatus.dmg">Download for macOS</a>
+          <a class="quiet" href="https://github.com/jerefrer/zoom-mic-status/releases">Release notes</a>
+        </div>
+        <p class="fineprint">Free and open source. macOS 15 or later. Signed and notarized by Apple, and it keeps itself up to date.</p>
+      </section>
+
+      <div class="showcase">
+        <img data-state="muted" src="images/desktop-muted.png" alt="A Mac desktop while muted: a red border around the screen, a red MIC MUTED badge under the menu bar, a red mic in the menu bar and a red-framed icon in the Dock">
+        <img data-state="live" src="images/desktop-live.png" alt="The same desktop while live: green border, green MIC LIVE badge, green menu bar and Dock icons" hidden>
+      </div>
+    </main>
+  </div>
+
+  <section class="block">
+    <div class="wrap">
+      <h2>Pick the signals you want</h2>
+      <p class="intro">Turn on any combination. Outside meetings, the badge and the border step aside and the icons turn grey.</p>
+      <dl class="indicators">
+        <div>
+          <dt>Floating badge</dt>
+          <dd>"MIC MUTED" or "MIC LIVE" above every window, even full-screen Zoom. Snap it to one of nine spots or drag it anywhere, at any size from 50 to 300 %.</dd>
+        </div>
+        <div>
+          <dt>Screen border</dt>
+          <dd>A colored frame around every screen that fades toward the center. Clicks go right through it, and its corners follow the shape of your display.</dd>
+        </div>
+        <div>
+          <dt>Menu bar icon</dt>
+          <dd>A red or green mic, alone or with a short label.</dd>
+        </div>
+        <div>
+          <dt>Dock icon</dt>
+          <dd>The app icon itself turns red or green. Click it to open the settings.</dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="wrap">
+      <h2>Settings you can see</h2>
+      <p class="intro">Every setting shows its effect as you change it, on a miniature of your own desktop and on your real screen.</p>
+      <div class="shots">
+        <figure>
+          <img src="images/settings-badge.png" alt="Badge settings: a miniature desktop with the badge, a size slider and a nine-dot position grid">
+          <figcaption>Badge size and position</figcaption>
+        </figure>
+        <figure>
+          <img src="images/settings-border.png" alt="Border settings: a miniature desktop framed in red, with thickness, opacity and fade controls">
+          <figcaption>Border thickness, opacity and fade</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="wrap split">
+      <div>
+        <h2>Fast</h2>
+        <p class="stat">0–80 ms</p>
+        <p>Zoom only refreshes its own mute menu about once a second. Zoom Mic Status also watches your participant tile, which changes the instant you toggle, so the signal follows your click, not Zoom's timer.</p>
+      </div>
+      <div>
+        <h2>Private</h2>
+        <p>Zoom has no public way to share its mute state, so the app reads what Zoom already shows on screen, through macOS Accessibility. It never clicks, types or sends anything to Zoom, and nothing leaves your Mac.</p>
+        <p>That is why macOS asks you to allow it under Accessibility the first time.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="wrap">
+      <h2>Install</h2>
+      <ol class="steps">
+        <li><span><strong>Download the DMG</strong> and drag Zoom Mic Status to Applications.</span></li>
+        <li><span><strong>Open it.</strong> It lives in the menu bar; choose <em>Grant Accessibility Access…</em> in its menu.</span></li>
+        <li><span><strong>Allow it</strong> in System Settings → Privacy &amp; Security → Accessibility. Join a Zoom meeting and the signal appears.</span></li>
+      </ol>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <span>Zoom Mic Status is open source on <a href="https://github.com/jerefrer/zoom-mic-status">GitHub</a>.</span>
+      <span>Not affiliated with Zoom. Zoom is a trademark of Zoom Communications, Inc.</span>
+    </div>
+  </footer>
+
+  <script>
+    // The demo switch flips the page border, the indicator rules and the desktop image.
+    const root = document.documentElement;
+    const buttons = document.querySelectorAll(".demo button");
+    const images = document.querySelectorAll(".showcase img");
+    buttons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const state = button.dataset.state;
+        root.dataset.state = state;
+        buttons.forEach((b) => b.setAttribute("aria-pressed", String(b === button)));
+        images.forEach((img) => { img.hidden = img.dataset.state !== state; });
+      });
+    });
+  </script>
+</body>
+</html>

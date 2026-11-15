@@ -27,6 +27,12 @@ MainActor.assumeIsolated {
         exit(0)
     }
 
+    // Build tooling: renders the README and website images into a folder.
+    if let index = CommandLine.arguments.firstIndex(of: "--render-showcase") {
+        Showcase.render(into: URL(fileURLWithPath: CommandLine.arguments[index + 1]))
+        exit(0)
+    }
+
     let app = NSApplication.shared
     let delegate = AppDelegate()
     app.delegate = delegate

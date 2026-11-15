@@ -38,7 +38,8 @@ final class SettingsViewModel: ObservableObject {
     @Published private(set) var screenFrame = NSScreen.main?.frame ?? .zero
     @Published private(set) var visibleFrame = NSScreen.main?.visibleFrame ?? .zero
     @Published private(set) var badgeFrame: CGRect = .zero
-    @Published private(set) var wallpaper: NSImage?
+    /// The user's wallpaper; the showcase renderer substitutes its own.
+    @Published var wallpaper: NSImage?
     let hasNotch = (NSScreen.main?.safeAreaInsets.top ?? 0) > 0
 
     private let modeStore: DisplayModeStore

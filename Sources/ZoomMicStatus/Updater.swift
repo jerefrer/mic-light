@@ -18,8 +18,9 @@ final class Updater: ObservableObject {
     private let controller: SPUStandardUpdaterController
     private var subscription: AnyCancellable?
 
-    init() {
-        controller = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
+    /// `starting: false` keeps Sparkle idle, for the showcase renderer.
+    init(starting: Bool = true) {
+        controller = SPUStandardUpdaterController(startingUpdater: starting, updaterDelegate: nil, userDriverDelegate: nil)
         checksAutomatically = controller.updater.automaticallyChecksForUpdates
         // Disabled while a check is already running.
         subscription = controller.updater.publisher(for: \.canCheckForUpdates)

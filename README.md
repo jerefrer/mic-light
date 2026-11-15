@@ -7,7 +7,7 @@ Four indicators, any combination can be enabled in the settings or from the menu
 
 | Mode | What it shows |
 |------|---------------|
-| Floating badge | A draggable red/green slab ("MIC MUTED" / "MIC LIVE") above every window, including full-screen Zoom |
+| Floating badge | A draggable red/green slab ("MIC MUTED" / "MIC LIVE") above every window, including full-screen Zoom; its size (50–300 %) is set in the settings |
 | Screen border | A red/green frame around every screen; clicks pass through it. Its inner corners follow the display's shape: squircles at the top and square at the bottom on notched MacBooks, square on other displays. Thickness (2–80 pt, default 10), opacity (default 75 %) and the fade toward the center (on by default) are set in the settings window |
 | Menu bar icon | A colored mic icon in the menu bar, alone or with a label |
 | Dock icon | The app's Dock icon turns red or green; clicking it opens the settings |

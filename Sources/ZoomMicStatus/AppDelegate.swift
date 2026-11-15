@@ -10,6 +10,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let modeStore = DisplayModeStore()
     private let borderStyleStore = BorderStyleStore()
     private let menuBarStyleStore = MenuBarStyleStore()
+    private let badgeScaleStore = BadgeScaleStore()
     private var badge: BadgeWindow!
     private var border: BorderOverlay!
     private var statusItem: StatusItemController!
@@ -25,6 +26,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             modeStore: modeStore,
             borderStyleStore: borderStyleStore,
             menuBarStyleStore: menuBarStyleStore,
+            badgeScaleStore: badgeScaleStore,
             loginItem: MainAppLoginItem(),
             onChange: { [weak self] in self?.render() },
             onResetBadgePosition: { [weak self] in self?.badge.resetPosition() }
@@ -82,7 +84,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem.show(status: status, shown: shown, style: menuBarStyleStore.style)
         dock.show(enabled: modes.contains(.dock), shown: shown, needsPermission: status == .needsPermission)
 
-        if let shown, modes.contains(.badge) { badge.show(shown) } else { badge.hide() }
+        if let shown, modes.contains(.badge) {
+            badge.show(shown, scale: badgeScaleStore.scale)
+        } else {
+            badge.hide()
+        }
 
         let style = borderStyleStore.style
         if border.style != style { border.style = style }

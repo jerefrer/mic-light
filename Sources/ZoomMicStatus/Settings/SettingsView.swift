@@ -26,8 +26,12 @@ struct SettingsView: View {
 
             Section {
                 Toggle(strings.badgeMode, isOn: model.binding(for: .badge))
-                LabeledContent(strings.badgePosition) {
-                    Button(strings.reset) { model.resetBadgePosition() }
+                Group {
+                    valueSlider(strings.badgeSize, value: $model.badgeScale,
+                                range: BadgeScaleStore.range, rounding: 0.05, format: strings.percent)
+                    LabeledContent(strings.badgePosition) {
+                        Button(strings.reset) { model.resetBadgePosition() }
+                    }
                 }
                 .disabled(!model.isEnabled(.badge))
                 Toggle(strings.menuBarMode, isOn: model.binding(for: .menuBar))

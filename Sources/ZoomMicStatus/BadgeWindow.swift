@@ -10,6 +10,7 @@ final class BadgeWindow {
     private let panel: NSPanel
     private let icon = NSImageView()
     private let label = NSTextField(labelWithString: "")
+    private let stack: NSStackView
     private let strings: Strings
 
     init(strings: Strings) {
@@ -28,20 +29,14 @@ final class BadgeWindow {
         panel.backgroundColor = .clear
         panel.hasShadow = true
 
-        label.font = Typography.badge
         label.textColor = Colors.onSignal
         icon.contentTintColor = Colors.onSignal
 
-        let stack = NSStackView(views: [icon, label])
+        stack = NSStackView(views: [icon, label])
         stack.orientation = .horizontal
-        stack.spacing = Spacing.badgeIconGap
-        stack.edgeInsets = NSEdgeInsets(
-            top: Spacing.badgeVerticalPadding, left: Spacing.badgeHorizontalPadding,
-            bottom: Spacing.badgeVerticalPadding, right: Spacing.badgeHorizontalPadding
-        )
         stack.wantsLayer = true
-        stack.layer?.cornerRadius = Spacing.badgeCornerRadius
         panel.contentView = stack
+        apply(scale: 1)
 
         if !panel.setFrameUsingName(Self.autosaveName) {
             placeAtDefaultPosition()
@@ -49,12 +44,25 @@ final class BadgeWindow {
         panel.setFrameAutosaveName(Self.autosaveName)
     }
 
-    func show(_ state: MicState) {
+    /// `scale` enlarges text, icon, padding and corners together, so the
+    /// badge keeps its proportions at every size.
+    func show(_ state: MicState, scale: CGFloat) {
+        apply(scale: scale)
         label.stringValue = strings.badgeLabel(state)
-        icon.image = Symbols.image(Symbols.mic(state), Typography.badgeIcon)
+        icon.image = Symbols.image(Symbols.mic(state), Typography.badgeIcon(scale: scale))
         panel.contentView?.layer?.backgroundColor = Colors.signal(state).cgColor
         resizeKeepingTopLeft()
         panel.orderFrontRegardless()
+    }
+
+    private func apply(scale: CGFloat) {
+        label.font = Typography.badge(scale: scale)
+        stack.spacing = Spacing.badgeIconGap * scale
+        stack.edgeInsets = NSEdgeInsets(
+            top: Spacing.badgeVerticalPadding * scale, left: Spacing.badgeHorizontalPadding * scale,
+            bottom: Spacing.badgeVerticalPadding * scale, right: Spacing.badgeHorizontalPadding * scale
+        )
+        stack.layer?.cornerRadius = Spacing.badgeCornerRadius * scale
     }
 
     func hide() {

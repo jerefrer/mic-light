@@ -9,6 +9,12 @@ final class SettingsViewModel: ObservableObject {
     @Published var borderWidth: Double { didSet { saveBorderStyle() } }
     @Published var borderOpacity: Double { didSet { saveBorderStyle() } }
     @Published var borderFades: Bool { didSet { saveBorderStyle() } }
+    @Published var badgeScale: Double {
+        didSet {
+            badgeScaleStore.scale = badgeScale
+            onChange()
+        }
+    }
     @Published var menuBarStyle: MenuBarStyle {
         didSet {
             menuBarStyleStore.style = menuBarStyle
@@ -24,6 +30,7 @@ final class SettingsViewModel: ObservableObject {
     private let modeStore: DisplayModeStore
     private let borderStyleStore: BorderStyleStore
     private let menuBarStyleStore: MenuBarStyleStore
+    private let badgeScaleStore: BadgeScaleStore
     private let loginItem: LoginItem
     private let onChange: () -> Void
     private let onResetBadgePosition: () -> Void
@@ -32,6 +39,7 @@ final class SettingsViewModel: ObservableObject {
         modeStore: DisplayModeStore,
         borderStyleStore: BorderStyleStore,
         menuBarStyleStore: MenuBarStyleStore,
+        badgeScaleStore: BadgeScaleStore,
         loginItem: LoginItem,
         onChange: @escaping () -> Void,
         onResetBadgePosition: @escaping () -> Void
@@ -39,6 +47,7 @@ final class SettingsViewModel: ObservableObject {
         self.modeStore = modeStore
         self.borderStyleStore = borderStyleStore
         self.menuBarStyleStore = menuBarStyleStore
+        self.badgeScaleStore = badgeScaleStore
         self.loginItem = loginItem
         self.onChange = onChange
         self.onResetBadgePosition = onResetBadgePosition
@@ -48,6 +57,7 @@ final class SettingsViewModel: ObservableObject {
         borderOpacity = style.opacity
         borderFades = style.fades
         menuBarStyle = menuBarStyleStore.style
+        badgeScale = badgeScaleStore.scale
         launchesAtLogin = loginItem.isEnabled
     }
 

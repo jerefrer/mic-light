@@ -79,6 +79,7 @@ public struct Strings: Sendable {
         }
     }
     public var borderAppearanceSection: String { pick("Border appearance", "Apparence de la bordure") }
+    public var badgeSize: String { pick("Badge size", "Taille de la pastille") }
     public var badgePosition: String { pick("Badge position", "Position de la pastille") }
     public var reset: String { pick("Reset", "Réinitialiser") }
     public var generalSection: String { pick("General", "Général") }

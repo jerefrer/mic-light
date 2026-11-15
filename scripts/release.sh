@@ -57,7 +57,8 @@ cat > build/appcast.xml <<XML
 XML
 
 git add VERSION
-git commit -m "chore(release): $TAG"
+# VERSION may already hold this version (e.g. the first release).
+git diff --cached --quiet || git commit -m "chore(release): $TAG"
 git tag -a "$TAG" -m "Zoom Mic Status $VERSION"
 git push origin HEAD --follow-tags
 gh release create "$TAG" "$ZIP" build/appcast.xml \

@@ -1,107 +1,124 @@
 import SwiftUI
 import ZoomMicStatusCore
 
-/// The settings window, in the grouped style of System Settings.
+/// The settings window: a sidebar of pages, each opening on an illustration
+/// of the user's own desktop that follows the settings as they change.
 struct SettingsView: View {
+    @ObservedObject var model: SettingsViewModel
+    let strings: Strings
+    @State private var page: SettingsPage? = .general
+
+    // A hand-built sidebar rather than NavigationSplitView, which ignored
+    // the requested column width and truncated the page titles.
+    var body: some View {
+        HStack(spacing: 0) {
+            sidebar
+                .frame(width: Spacing.settingsSidebarWidth)
+                .frame(maxHeight: .infinity, alignment: .top)
+                .background(SidebarMaterial())
+            Divider()
+            Group {
+                switch page ?? .general {
+                case .general: GeneralPage(model: model, strings: strings)
+                case .badge: BadgePage(model: model, strings: strings)
+                case .border: BorderPage(model: model, strings: strings)
+                case .menuBarDock: MenuBarDockPage(model: model, strings: strings)
+                case .about: AboutPage(model: model, strings: strings)
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .ignoresSafeArea()
+        .frame(width: Spacing.settingsWindowWidth, height: Spacing.settingsWindowHeight)
+    }
+
+    private var sidebar: some View {
+        VStack(alignment: .leading, spacing: Spacing.settingsSidebarRowSpacing) {
+            sidebarRow(.general)
+            sidebarSection(strings.indicatorsSection)
+            sidebarRow(.badge)
+            sidebarRow(.border)
+            sidebarRow(.menuBarDock)
+            sidebarSection(strings.appName)
+            sidebarRow(.about)
+        }
+        .padding(.horizontal, Spacing.settingsSidebarPadding)
+        // Clears the traffic lights, which sit over the sidebar.
+        .padding(.top, Spacing.settingsSidebarTopInset)
+    }
+
+    private func sidebarSection(_ title: String) -> some View {
+        Text(title)
+            .font(Typography.settingsSidebarSection)
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, Spacing.settingsSidebarRowPadding)
+            .padding(.top, Spacing.settingsSidebarSectionGap)
+    }
+
+    private func sidebarRow(_ candidate: SettingsPage) -> some View {
+        Button {
+            page = candidate
+        } label: {
+            HStack(spacing: Spacing.settingsSidebarIconGap) {
+                PageIcon(page: candidate, size: Spacing.settingsSidebarIconSize,
+                         cornerRadius: Spacing.settingsSidebarIconCornerRadius, font: Typography.settingsSidebarIcon)
+                Text(candidate.title(strings))
+                Spacer(minLength: 0)
+            }
+            .padding(Spacing.settingsSidebarRowPadding)
+            .background(
+                RoundedRectangle(cornerRadius: Spacing.settingsSidebarSelectionCornerRadius, style: .continuous)
+                    .fill(candidate == page ? Color(nsColor: Colors.sidebarSelection) : .clear)
+            )
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+private struct GeneralPage: View {
     @ObservedObject var model: SettingsViewModel
     let strings: Strings
 
     var body: some View {
-        Form {
-            Section { header }
+        SettingsPageLayout(page: .general, strings: strings, intro: strings.generalIntro) {
+            MiniDesktop(model: model, strings: strings, showsBadge: model.isEnabled(.badge),
+                        showsBorder: model.isEnabled(.border), showsMenuBar: model.isEnabled(.menuBar),
+                        showsDock: model.isEnabled(.dock), fadesDisabled: false)
 
-            Section {
-                Picker(strings.simulate, selection: shownState) {
-                    ForEach([MicState.muted, .live], id: \.self) { state in
-                        Text(strings.stateName(state)).tag(state)
+            SettingsCard(title: strings.previewSection,
+                         footer: model.canSimulate ? strings.previewIdleHint : strings.previewMeetingHint) {
+                SettingsRow(label: strings.simulate) {
+                    Picker(strings.simulate, selection: shownState) {
+                        ForEach([MicState.muted, .live], id: \.self) { state in
+                            Text(strings.stateName(state)).tag(state)
+                        }
                     }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                    .frame(width: Spacing.settingsSliderWidth)
+                    .disabled(!model.canSimulate)
                 }
-                .pickerStyle(.segmented)
-                .disabled(!model.canSimulate)
-            } header: {
-                Text(strings.previewSection)
-            } footer: {
-                hint(model.canSimulate ? strings.previewIdleHint : strings.previewMeetingHint)
             }
 
-            Section {
-                Toggle(strings.badgeMode, isOn: model.binding(for: .badge))
-                Group {
-                    valueSlider(strings.badgeSize, value: $model.badgeScale,
-                                range: BadgeScaleStore.range, rounding: 0.05, format: strings.percent)
-                    LabeledContent(strings.badgePosition) {
-                        Button(strings.reset) { model.resetBadgePosition() }
+            HStack(alignment: .top, spacing: Spacing.settingsCardSpacing) {
+                SettingsCard(title: strings.startupSection, footer: model.errorMessage) {
+                    ToggleRow(label: strings.launchAtLogin, isOn: Binding(
+                        get: { model.launchesAtLogin },
+                        set: { model.setLaunchesAtLogin($0) }
+                    ))
+                }
+                SettingsCard(title: strings.permissionsSection) {
+                    if model.accessibilityGranted {
+                        SettingsRow(label: strings.accessibilityGranted) {
+                            Image(systemName: "checkmark.circle.fill").foregroundStyle(Color(nsColor: Colors.live))
+                        }
+                    } else {
+                        SettingsRow(label: strings.statusLine(.needsPermission)) {
+                            Button(strings.grantAccess) { model.grantAccess() }
+                        }
                     }
                 }
-                .disabled(!model.isEnabled(.badge))
-                Toggle(strings.menuBarMode, isOn: model.binding(for: .menuBar))
-                    .disabled(!model.canToggle(.menuBar))
-                Picker(strings.menuBarStyle, selection: $model.menuBarStyle) {
-                    ForEach(MenuBarStyle.allCases, id: \.self) { style in
-                        Text(strings.menuBarStyleName(style)).tag(style)
-                    }
-                }
-                .disabled(!model.isEnabled(.menuBar))
-                Toggle(strings.dockMode, isOn: model.binding(for: .dock))
-                    .disabled(!model.canToggle(.dock))
-                Toggle(strings.borderMode, isOn: model.binding(for: .border))
-            } header: {
-                Text(strings.indicatorsSection)
-            } footer: {
-                hint(strings.waysBackHint)
-            }
-
-            Section(strings.borderAppearanceSection) {
-                valueSlider(strings.borderWidth, value: $model.borderWidth,
-                            range: BorderStyle.widthRange, rounding: 1, format: strings.points)
-                valueSlider(strings.borderOpacity, value: $model.borderOpacity,
-                            range: BorderStyle.opacityRange, rounding: 0.01, format: strings.percent)
-                Toggle(strings.borderFade, isOn: $model.borderFades)
-            }
-            .disabled(!model.isEnabled(.border))
-
-            Section {
-                Toggle(strings.launchAtLogin, isOn: Binding(
-                    get: { model.launchesAtLogin },
-                    set: { model.setLaunchesAtLogin($0) }
-                ))
-                if model.accessibilityGranted {
-                    LabeledContent(strings.accessibilityGranted) {
-                        Image(systemName: "checkmark.circle.fill").foregroundStyle(Color(nsColor: Colors.live))
-                    }
-                } else {
-                    LabeledContent(strings.statusLine(.needsPermission)) {
-                        Button(strings.grantAccess) { model.grantAccess() }
-                    }
-                }
-            } header: {
-                Text(strings.generalSection)
-            } footer: {
-                if let error = model.errorMessage { hint(error).foregroundStyle(Color(nsColor: Colors.muted)) }
-            }
-        }
-        .formStyle(.grouped)
-        .frame(width: Spacing.settingsWidth)
-        .fixedSize(horizontal: false, vertical: true)
-    }
-
-    /// The app's identity and the state the indicators currently show.
-    private var header: some View {
-        let shown = SettingsPreview.displayedState(status: model.status, simulated: model.simulated)
-        return HStack(spacing: Spacing.settingsHeaderSpacing) {
-            RoundedRectangle(cornerRadius: Spacing.settingsHeaderIconCornerRadius, style: .continuous)
-                .fill(shown.map { Color(nsColor: Colors.signal($0)) } ?? Color.secondary)
-                .frame(width: Spacing.settingsHeaderIconSize, height: Spacing.settingsHeaderIconSize)
-                .overlay {
-                    Image(systemName: shown.map(Symbols.mic) ?? Symbols.idle)
-                        .font(Typography.settingsHeaderIcon)
-                        .foregroundStyle(Color(nsColor: Colors.onSignal))
-                }
-            VStack(alignment: .leading, spacing: 2) {
-                Text(strings.appName).font(Typography.settingsTitle)
-                Text(strings.statusLine(model.status))
-                    .font(Typography.settingsSubtitle)
-                    .foregroundStyle(.secondary)
             }
         }
     }
@@ -109,36 +126,122 @@ struct SettingsView: View {
     /// During a meeting the disabled picker shows the real state, not the
     /// last simulated one.
     private var shownState: Binding<MicState> {
-        Binding(
-            get: { SettingsPreview.displayedState(status: model.status, simulated: model.simulated) ?? model.simulated },
-            set: { model.simulated = $0 }
-        )
+        Binding(get: { model.previewState }, set: { model.simulated = $0 })
+    }
+}
+
+private struct BadgePage: View {
+    @ObservedObject var model: SettingsViewModel
+    let strings: Strings
+
+    var body: some View {
+        SettingsPageLayout(page: .badge, strings: strings, intro: strings.badgeIntro) {
+            MiniDesktop(model: model, strings: strings, showsBadge: true)
+
+            HStack(alignment: .top, spacing: Spacing.settingsCardSpacing) {
+                SettingsCard(title: strings.appearance) {
+                    ToggleRow(label: strings.showBadge, isOn: model.binding(for: .badge))
+                    SliderRow(label: strings.badgeSize, value: $model.badgeScale,
+                              range: BadgeScaleStore.range, rounding: 0.05, format: strings.percent)
+                        .disabled(!model.isEnabled(.badge))
+                }
+                SettingsCard(title: strings.badgePosition,
+                             footer: model.badgeAnchor.map(strings.badgeAnchorName) ?? strings.badgeFreePosition) {
+                    AnchorGrid(anchor: $model.badgeAnchor, wallpaper: model.wallpaper,
+                               aspectRatio: model.screenFrame.width / max(model.screenFrame.height, 1),
+                               strings: strings)
+                        .frame(maxWidth: .infinity)
+                }
+                .frame(width: Spacing.gridWidth + 2 * Spacing.settingsCardPadding)
+                .disabled(!model.isEnabled(.badge))
+            }
+        }
+    }
+}
+
+private struct BorderPage: View {
+    @ObservedObject var model: SettingsViewModel
+    let strings: Strings
+
+    var body: some View {
+        SettingsPageLayout(page: .border, strings: strings, intro: strings.borderIntro) {
+            MiniDesktop(model: model, strings: strings, showsBorder: true)
+
+            SettingsCard {
+                ToggleRow(label: strings.showBorder, isOn: model.binding(for: .border))
+                Group {
+                    SliderRow(label: strings.borderWidth, value: $model.borderWidth,
+                              range: BorderStyle.widthRange, rounding: 1, format: strings.points)
+                    SliderRow(label: strings.borderOpacity, value: $model.borderOpacity,
+                              range: BorderStyle.opacityRange, rounding: 0.01, format: strings.percent)
+                    ToggleRow(label: strings.borderFade, isOn: $model.borderFades)
+                }
+                .disabled(!model.isEnabled(.border))
+            }
+        }
+    }
+}
+
+private struct MenuBarDockPage: View {
+    @ObservedObject var model: SettingsViewModel
+    let strings: Strings
+
+    var body: some View {
+        SettingsPageLayout(page: .menuBarDock, strings: strings, intro: strings.menuBarDockIntro) {
+            MenuBarDockIllustration(model: model, strings: strings)
+
+            HStack(alignment: .top, spacing: Spacing.settingsCardSpacing) {
+                SettingsCard(title: strings.menuBarSection) {
+                    ToggleRow(label: strings.showInMenuBar, isOn: model.binding(for: .menuBar))
+                        .disabled(!model.canToggle(.menuBar))
+                    SettingsRow(label: strings.display) {
+                        Picker(strings.display, selection: $model.menuBarStyle) {
+                            ForEach(MenuBarStyle.allCases, id: \.self) { style in
+                                Text(strings.menuBarStyleName(style)).tag(style)
+                            }
+                        }
+                        .labelsHidden()
+                        .fixedSize()
+                    }
+                    .disabled(!model.isEnabled(.menuBar))
+                }
+                SettingsCard(title: strings.dockSection, footer: strings.dockHint) {
+                    ToggleRow(label: strings.showInDock, isOn: model.binding(for: .dock))
+                        .disabled(!model.canToggle(.dock))
+                }
+            }
+
+            Text(strings.waysBackHint).font(Typography.settingsHint).foregroundStyle(.secondary)
+        }
+    }
+}
+
+private struct AboutPage: View {
+    @ObservedObject var model: SettingsViewModel
+    let strings: Strings
+
+    private var version: String {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "dev"
     }
 
-    private func hint(_ text: String) -> some View {
-        Text(text)
-            .multilineTextAlignment(.leading)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, Spacing.settingsHintInset)
-    }
+    var body: some View {
+        SettingsPageLayout(page: .about, strings: strings, intro: nil) {
+            VStack(spacing: Spacing.settingsSectionTitleGap) {
+                if let icon = model.dockIcon(for: model.previewState) {
+                    Image(nsImage: icon)
+                        .resizable()
+                        .frame(width: Spacing.aboutIconSize, height: Spacing.aboutIconSize)
+                }
+                Text(strings.appName).font(Typography.aboutTitle)
+                Text(strings.version(version)).foregroundStyle(.secondary)
+                Text(strings.aboutTagline).font(Typography.aboutTagline)
+            }
+            .frame(maxWidth: .infinity)
 
-    /// A continuous slider (a stepped one draws a dense row of tick marks)
-    /// whose value is rounded to `rounding`.
-    private func valueSlider(
-        _ title: String, value: Binding<Double>, range: ClosedRange<Double>, rounding: Double,
-        format: @escaping (Double) -> String
-    ) -> some View {
-        let rounded = Binding(
-            get: { value.wrappedValue },
-            set: { value.wrappedValue = ($0 / rounding).rounded() * rounding }
-        )
-        return LabeledContent(title) {
-            HStack {
-                Slider(value: rounded, in: range)
-                Text(format(value.wrappedValue))
-                    .font(Typography.settingsValue)
+            SettingsCard {
+                Text(strings.aboutPrivacy)
                     .foregroundStyle(.secondary)
-                    .frame(width: Spacing.settingsValueWidth, alignment: .trailing)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
     }

@@ -15,6 +15,13 @@ final class SettingsViewModel: ObservableObject {
             onChange()
         }
     }
+    /// `nil` once the user dragged the badge by hand.
+    @Published var badgeAnchor: BadgeAnchor? {
+        didSet {
+            badgeAnchorStore.anchor = badgeAnchor
+            onChange()
+        }
+    }
     @Published var menuBarStyle: MenuBarStyle {
         didSet {
             menuBarStyleStore.style = menuBarStyle
@@ -27,30 +34,38 @@ final class SettingsViewModel: ObservableObject {
     @Published private(set) var launchesAtLogin: Bool
     @Published private(set) var errorMessage: String?
 
+    /// What the illustrations need to draw a faithful miniature desktop.
+    @Published private(set) var screenFrame = NSScreen.main?.frame ?? .zero
+    @Published private(set) var visibleFrame = NSScreen.main?.visibleFrame ?? .zero
+    @Published private(set) var badgeFrame: CGRect = .zero
+    @Published private(set) var wallpaper: NSImage?
+    let hasNotch = (NSScreen.main?.safeAreaInsets.top ?? 0) > 0
+
     private let modeStore: DisplayModeStore
     private let borderStyleStore: BorderStyleStore
     private let menuBarStyleStore: MenuBarStyleStore
     private let badgeScaleStore: BadgeScaleStore
+    private let badgeAnchorStore: BadgeAnchorStore
     private let loginItem: LoginItem
     private let onChange: () -> Void
-    private let onResetBadgePosition: () -> Void
+    private var dockIcons: [MicState?: NSImage] = [:]
 
     init(
         modeStore: DisplayModeStore,
         borderStyleStore: BorderStyleStore,
         menuBarStyleStore: MenuBarStyleStore,
         badgeScaleStore: BadgeScaleStore,
+        badgeAnchorStore: BadgeAnchorStore,
         loginItem: LoginItem,
-        onChange: @escaping () -> Void,
-        onResetBadgePosition: @escaping () -> Void
+        onChange: @escaping () -> Void
     ) {
         self.modeStore = modeStore
         self.borderStyleStore = borderStyleStore
         self.menuBarStyleStore = menuBarStyleStore
         self.badgeScaleStore = badgeScaleStore
+        self.badgeAnchorStore = badgeAnchorStore
         self.loginItem = loginItem
         self.onChange = onChange
-        self.onResetBadgePosition = onResetBadgePosition
         modes = modeStore.modes
         let style = borderStyleStore.style
         borderWidth = style.width
@@ -58,11 +73,19 @@ final class SettingsViewModel: ObservableObject {
         borderFades = style.fades
         menuBarStyle = menuBarStyleStore.style
         badgeScale = badgeScaleStore.scale
+        badgeAnchor = badgeAnchorStore.anchor
         launchesAtLogin = loginItem.isEnabled
     }
 
     var canSimulate: Bool { SettingsPreview.canSimulate(status: status) }
     var accessibilityGranted: Bool { status != .needsPermission }
+    var borderStyle: BorderStyle { BorderStyle(width: borderWidth, opacity: borderOpacity, fades: borderFades) }
+
+    /// The state the illustrations show: the real one during a meeting,
+    /// otherwise the simulated one.
+    var previewState: MicState {
+        SettingsPreview.displayedState(status: status, simulated: simulated) ?? simulated
+    }
 
     func isEnabled(_ mode: DisplayModes) -> Bool { modes.contains(mode) }
 
@@ -92,6 +115,29 @@ final class SettingsViewModel: ObservableObject {
         self.status = status
     }
 
+    /// Called whenever the badge window moves or resizes.
+    func update(badgeFrame: CGRect, draggedByUser: Bool) {
+        self.badgeFrame = badgeFrame
+        if draggedByUser, badgeAnchor != nil { badgeAnchor = nil }
+    }
+
+    /// Refreshes what may have changed while the window was closed.
+    func windowWillShow() {
+        launchesAtLogin = loginItem.isEnabled
+        if let screen = NSScreen.main {
+            screenFrame = screen.frame
+            visibleFrame = screen.visibleFrame
+            wallpaper = Wallpaper.thumbnail(for: screen)
+        }
+    }
+
+    func dockIcon(for state: MicState?) -> NSImage? {
+        if let cached = dockIcons[state] { return cached }
+        let icon = DockIcon.image(shown: state, needsPermission: false)
+        dockIcons[state] = icon
+        return icon
+    }
+
     func setLaunchesAtLogin(_ enabled: Bool) {
         do {
             try loginItem.setEnabled(enabled)
@@ -102,21 +148,12 @@ final class SettingsViewModel: ObservableObject {
         launchesAtLogin = loginItem.isEnabled
     }
 
-    /// The login item can be changed elsewhere (System Settings).
-    func refreshLaunchesAtLogin() {
-        launchesAtLogin = loginItem.isEnabled
-    }
-
-    func resetBadgePosition() {
-        onResetBadgePosition()
-    }
-
     func grantAccess() {
         AccessibilityAccess.request()
     }
 
     private func saveBorderStyle() {
-        borderStyleStore.style = BorderStyle(width: borderWidth, opacity: borderOpacity, fades: borderFades)
+        borderStyleStore.style = borderStyle
         onChange()
     }
 }

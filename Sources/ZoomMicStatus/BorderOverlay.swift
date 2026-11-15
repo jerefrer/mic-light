@@ -65,7 +65,8 @@ final class BorderOverlay {
     }
 }
 
-private final class BorderView: NSView {
+/// Also embedded, scaled down, in the settings illustrations.
+final class BorderView: NSView {
     var color: NSColor = .clear {
         didSet { needsDisplay = true }
     }

@@ -49,7 +49,6 @@ public struct Strings: Sendable {
     public func points(_ value: Double) -> String { "\(Int(value.rounded())) pt" }
     public func percent(_ value: Double) -> String { "\(Int((value * 100).rounded())) %" }
     public var grantAccess: String { pick("Grant Accessibility Access…", "Autoriser l'accès Accessibilité…") }
-    public var resetBadgePosition: String { pick("Reset Badge Position", "Replacer la pastille") }
     public var launchAtLogin: String { pick("Launch at Login", "Ouvrir à la connexion") }
     public var settings: String { pick("Settings…", "Réglages…") }
     public var settingsTitle: String { pick("Zoom Mic Status Settings", "Réglages de Zoom Mic Status") }
@@ -79,9 +78,71 @@ public struct Strings: Sendable {
         }
     }
     public var borderAppearanceSection: String { pick("Border appearance", "Apparence de la bordure") }
+    public var appearance: String { pick("Appearance", "Apparence") }
     public var badgeSize: String { pick("Badge size", "Taille de la pastille") }
     public var badgePosition: String { pick("Badge position", "Position de la pastille") }
-    public var reset: String { pick("Reset", "Réinitialiser") }
+    public var badgeFreePosition: String {
+        pick("Placed by hand. Pick a dot to snap it back to the grid.",
+             "Placée à la main. Choisissez un point pour la recaler sur la grille.")
+    }
+    public func badgeAnchorName(_ anchor: BadgeAnchor) -> String {
+        switch anchor {
+        case .topLeft: pick("Top left", "En haut à gauche")
+        case .top: pick("Top", "En haut")
+        case .topRight: pick("Top right", "En haut à droite")
+        case .left: pick("Left", "À gauche")
+        case .center: pick("Center", "Au centre")
+        case .right: pick("Right", "À droite")
+        case .bottomLeft: pick("Bottom left", "En bas à gauche")
+        case .bottom: pick("Bottom", "En bas")
+        case .bottomRight: pick("Bottom right", "En bas à droite")
+        }
+    }
+
+    // Settings pages
+    public var generalPage: String { pick("General", "Général") }
+    public var badgePage: String { pick("Badge", "Pastille") }
+    public var borderPage: String { pick("Border", "Bordure") }
+    public var menuBarDockPage: String { pick("Menu Bar & Dock", "Barre des menus et Dock") }
+    public var aboutPage: String { pick("About", "À propos") }
+    public var generalIntro: String {
+        pick("Everything currently enabled, on your own desktop.",
+             "Tout ce qui est activé, sur votre propre bureau.")
+    }
+    public var badgeIntro: String {
+        pick("A label floating above every window, even full-screen Zoom. Drag it anywhere on screen.",
+             "Une étiquette au-dessus de toutes les fenêtres, même Zoom en plein écran. Déplaçable n'importe où.")
+    }
+    public var borderIntro: String {
+        pick("A colored frame around every screen. Clicks pass right through it.",
+             "Un cadre coloré autour de chaque écran. Les clics passent au travers.")
+    }
+    public var menuBarDockIntro: String {
+        pick("Colored icons that also open these settings.",
+             "Des icônes colorées qui ouvrent aussi ces réglages.")
+    }
+    public var startupSection: String { pick("Startup", "Démarrage") }
+    public var permissionsSection: String { pick("Permissions", "Autorisations") }
+    public var showBadge: String { pick("Show the badge", "Afficher la pastille") }
+    public var showBorder: String { pick("Show the border", "Afficher la bordure") }
+    public var menuBarSection: String { pick("Menu bar", "Barre des menus") }
+    public var dockSection: String { pick("Dock", "Dock") }
+    public var showInMenuBar: String { pick("Show in the menu bar", "Afficher dans la barre des menus") }
+    public var showInDock: String { pick("Show in the Dock", "Afficher dans le Dock") }
+    public var display: String { pick("Display", "Affichage") }
+    public var dockHint: String {
+        pick("Click the Dock icon to open these settings.",
+             "Cliquez sur l'icône du Dock pour ouvrir ces réglages.")
+    }
+    public var aboutTagline: String {
+        pick("Makes Zoom's microphone state impossible to miss.",
+             "Rend l'état du micro Zoom impossible à manquer.")
+    }
+    public var aboutPrivacy: String {
+        pick("Reads Zoom's menu and meeting window through macOS Accessibility. It never clicks, types or sends anything to Zoom, and nothing leaves your Mac.",
+             "Lit le menu et la fenêtre de réunion de Zoom via l'Accessibilité de macOS. Ne clique, ne tape et n'envoie jamais rien à Zoom, et rien ne quitte votre Mac.")
+    }
+    public func version(_ number: String) -> String { pick("Version \(number)", "Version \(number)") }
     public var generalSection: String { pick("General", "Général") }
     public var accessibilityGranted: String { pick("Accessibility access granted", "Accès Accessibilité accordé") }
     public var quit: String { pick("Quit Zoom Mic Status", "Quitter Zoom Mic Status") }

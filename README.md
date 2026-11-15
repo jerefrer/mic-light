@@ -18,10 +18,13 @@ on. Outside meetings they show a neutral mic.
 
 ## Settings
 
-**Settings…** (⌘, in the menu) opens a settings window: display modes, menu
-bar style, badge position, border appearance, launch at login and the
-Accessibility status. While it is open, the real badge, border and menu bar
-icon preview every change on screen; outside meetings a *Simulate* switch
+**Settings…** (⌘, in the menu, or a click on the Dock icon) opens a settings
+window with a page per indicator. Each page opens on an illustration drawn
+over the user's own wallpaper (a miniature of their screen, or a close-up of
+the menu bar and Dock) that follows the settings as they change. The badge
+page has a 3×3 grid to snap the badge to a corner, an edge or the center;
+dragging it by hand still works. While the window is open, the real badge,
+border, menu bar and Dock icons also preview every change on screen; outside meetings a *Simulate* switch
 shows either state, while during a meeting the preview always follows the
 real microphone. The UI is in French
 when the system language is French, English otherwise.
@@ -56,7 +59,7 @@ noticeable time.
 
 ## Requirements
 
-- macOS 14 or later
+- macOS 15 or later
 - Zoom installed in `/Applications`
 - Xcode command line tools (Swift 6) to build
 

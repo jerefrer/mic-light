@@ -22,7 +22,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
     func show() {
         let window = self.window ?? makeWindow()
         self.window = window
-        model.refreshLaunchesAtLogin()
+        model.windowWillShow()
         // A menu bar app is never active on its own; without this the
         // window would open behind the frontmost app.
         NSApp.activate()
@@ -43,7 +43,10 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         hosting.sizingOptions = .preferredContentSize
         let window = NSWindow(contentViewController: hosting)
         window.title = strings.settingsTitle
-        window.styleMask = [.titled, .closable]
+        // The sidebar runs up under the traffic lights, as in System Settings.
+        window.styleMask = [.titled, .closable, .miniaturizable, .fullSizeContentView]
+        window.titlebarAppearsTransparent = true
+        window.titleVisibility = .hidden
         window.isReleasedWhenClosed = false
         window.delegate = self
         window.center()

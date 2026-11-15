@@ -88,3 +88,12 @@
 **Revisit if:** Users want to tune indicators without having them on screen.
 
 ---
+
+## 2026-11-15 — Settings window in the style of LookAway
+**Chosen:** User decision: a sidebar of pages (General, Badge, Border, Menu Bar & Dock, About) with colored icon tiles; each page opens on an illustration drawn over the user's own wallpaper (`NSWorkspace.desktopImageURL`) that mirrors the current settings — a scaled miniature of the main screen (the border is the real `BorderView`, scaled), or a close-up of the menu bar and Dock. The badge gets a 3×3 position grid; a manual drag switches it to a free position.
+**Alternatives:** The previous single grouped form; `NavigationSplitView` for the sidebar.
+**Why:** The user found the grouped form too plain and pointed at LookAway. The sidebar is hand-built because `NavigationSplitView` ignored the requested column width (rendered at 145 pt, truncating titles) even with min/ideal/max set. The minimum macOS becomes 15 for SwiftUI's `Group(subviews:)`, used to draw dividers between card rows.
+**Trade-offs:** Wallpapers without a still image (dynamic/aerial) fall back to a gradient. Illustrations are faithful in position and scale, so a thin border looks thin in them.
+**Revisit if:** Supporting macOS 14 matters, or NavigationSplitView's width handling is fixed.
+
+---

@@ -11,6 +11,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let borderStyleStore = BorderStyleStore()
     private let menuBarStyleStore = MenuBarStyleStore()
     private let badgeScaleStore = BadgeScaleStore()
+    private let badgeAnchorStore = BadgeAnchorStore()
     private var badge: BadgeWindow!
     private var border: BorderOverlay!
     private var statusItem: StatusItemController!
@@ -20,17 +21,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var monitor: StatusMonitor!
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        badge = BadgeWindow(strings: strings)
+        badge = BadgeWindow(strings: strings, anchor: badgeAnchorStore.anchor)
         border = BorderOverlay(style: borderStyleStore.style)
         settingsModel = SettingsViewModel(
             modeStore: modeStore,
             borderStyleStore: borderStyleStore,
             menuBarStyleStore: menuBarStyleStore,
             badgeScaleStore: badgeScaleStore,
+            badgeAnchorStore: badgeAnchorStore,
             loginItem: MainAppLoginItem(),
-            onChange: { [weak self] in self?.render() },
-            onResetBadgePosition: { [weak self] in self?.badge.resetPosition() }
+            onChange: { [weak self] in self?.render() }
         )
+        settingsModel.update(badgeFrame: badge.frame, draggedByUser: false)
+        badge.onFrameChange = { [weak self] frame, draggedByUser in
+            self?.settingsModel.update(badgeFrame: frame, draggedByUser: draggedByUser)
+        }
         settingsWindow = SettingsWindowController(model: settingsModel, strings: strings) { [weak self] _ in
             self?.render()
         }
@@ -84,6 +89,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem.show(status: status, shown: shown, style: menuBarStyleStore.style)
         dock.show(enabled: modes.contains(.dock), shown: shown, needsPermission: status == .needsPermission)
 
+        badge.anchor = badgeAnchorStore.anchor
         if let shown, modes.contains(.badge) {
             badge.show(shown, scale: badgeScaleStore.scale)
         } else {

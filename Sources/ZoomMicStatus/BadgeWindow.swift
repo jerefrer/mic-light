@@ -2,7 +2,8 @@ import AppKit
 import ZoomMicStatusCore
 
 /// The floating badge: a draggable red or green slab above every window,
-/// including full-screen Zoom.
+/// including full-screen Zoom. It sits at one of the nine grid anchors, or
+/// wherever the user dragged it.
 @MainActor
 final class BadgeWindow {
     private static let autosaveName = "Badge"
@@ -12,9 +13,23 @@ final class BadgeWindow {
     private let label = NSTextField(labelWithString: "")
     private let stack: NSStackView
     private let strings: Strings
+    private var moveObserver: NSObjectProtocol?
+    /// Our own moves must not be mistaken for a drag by the user.
+    private var placing = false
 
-    init(strings: Strings) {
+    /// `nil` keeps the badge where the user dragged it.
+    var anchor: BadgeAnchor? {
+        didSet { if anchor != oldValue { placeAtAnchor() } }
+    }
+
+    /// Called when the user drags the badge, and whenever its frame changes.
+    var onFrameChange: ((_ frame: NSRect, _ draggedByUser: Bool) -> Void)?
+
+    var frame: NSRect { panel.frame }
+
+    init(strings: Strings, anchor: BadgeAnchor?) {
         self.strings = strings
+        self.anchor = anchor
         panel = NSPanel(
             contentRect: .zero,
             styleMask: [.borderless, .nonactivatingPanel],
@@ -38,10 +53,15 @@ final class BadgeWindow {
         panel.contentView = stack
         apply(scale: 1)
 
-        if !panel.setFrameUsingName(Self.autosaveName) {
-            placeAtDefaultPosition()
-        }
+        panel.setFrameUsingName(Self.autosaveName)
         panel.setFrameAutosaveName(Self.autosaveName)
+        placeAtAnchor()
+
+        moveObserver = NotificationCenter.default.addObserver(
+            forName: NSWindow.didMoveNotification, object: panel, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.panelMoved() }
+        }
     }
 
     /// `scale` enlarges text, icon, padding and corners together, so the
@@ -51,8 +71,12 @@ final class BadgeWindow {
         label.stringValue = strings.badgeLabel(state)
         icon.image = Symbols.image(Symbols.mic(state), Typography.badgeIcon(scale: scale))
         panel.contentView?.layer?.backgroundColor = Colors.signal(state).cgColor
-        resizeKeepingTopLeft()
+        resize()
         panel.orderFrontRegardless()
+    }
+
+    func hide() {
+        panel.orderOut(nil)
     }
 
     private func apply(scale: CGFloat) {
@@ -65,31 +89,37 @@ final class BadgeWindow {
         stack.layer?.cornerRadius = Spacing.badgeCornerRadius * scale
     }
 
-    func hide() {
-        panel.orderOut(nil)
-    }
-
-    func resetPosition() {
-        placeAtDefaultPosition()
-    }
-
-    /// Centered just below the menu bar of the main screen.
-    private func placeAtDefaultPosition() {
-        guard let screen = NSScreen.main else { return }
-        let size = panel.contentView?.fittingSize ?? .zero
-        let visible = screen.visibleFrame
-        panel.setFrameTopLeftPoint(NSPoint(
-            x: visible.midX - size.width / 2,
-            y: visible.maxY - Spacing.badgeTopMargin
-        ))
-    }
-
-    /// The label width changes between states; keep the corner the user
-    /// dragged the badge to where it is.
-    private func resizeKeepingTopLeft() {
-        guard let size = panel.contentView?.fittingSize else { return }
+    /// The size changes with the state's label and the size setting. An
+    /// anchored badge stays aligned to its anchor (a right-anchored badge
+    /// grows leftward); a dragged one keeps its top-left corner.
+    private func resize() {
+        guard let size = panel.contentView?.fittingSize, size != panel.frame.size else { return }
         let topLeft = NSPoint(x: panel.frame.minX, y: panel.frame.maxY)
-        panel.setContentSize(size)
-        panel.setFrameTopLeftPoint(topLeft)
+        place {
+            panel.setContentSize(size)
+            panel.setFrameTopLeftPoint(topLeft)
+        }
+        placeAtAnchor()
+    }
+
+    private func placeAtAnchor() {
+        guard let anchor, let screen = panel.screen ?? NSScreen.main else { return }
+        let size = panel.contentView?.fittingSize ?? panel.frame.size
+        let origin = BadgePlacement.origin(
+            for: anchor, size: size, in: screen.visibleFrame, margin: Spacing.badgeScreenMargin
+        )
+        place { panel.setFrameOrigin(origin) }
+    }
+
+    private func place(_ move: () -> Void) {
+        placing = true
+        move()
+        placing = false
+        onFrameChange?(panel.frame, false)
+    }
+
+    private func panelMoved() {
+        guard !placing else { return }
+        onFrameChange?(panel.frame, true)
     }
 }

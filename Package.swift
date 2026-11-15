@@ -3,7 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "ZoomMicStatus",
-    platforms: [.macOS(.v14)],
+    platforms: [.macOS(.v15)],
     targets: [
         // Pure logic, no AppKit: everything here is unit-tested.
         .target(name: "ZoomMicStatusCore"),
